@@ -14,10 +14,17 @@ class Device {
         catch(Exception e) {
             e.printStackTrace();
         }
+        moveAndResizeWindow(windowTitle);
         x = rect[0];
         y = rect[1];
         width = rect[2] - rect[0];
         height = rect[3] - rect[1];
+    }
+
+    private void moveAndResizeWindow(String windowTitle) {
+        User32.INSTANCE.SetWindowPos(User32.INSTANCE.FindWindow(null, windowTitle),
+                null,Main.devicesCount * 502,0, 1480, 960, null);
+        Main.devicesCount++;
     }
 
     public int[] getRect(String windowName) throws Exception {

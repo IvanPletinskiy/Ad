@@ -10,6 +10,7 @@ public interface User32 extends StdCallLibrary {
             W32APIOptions.DEFAULT_OPTIONS);
 
     WinDef.HWND FindWindow(String lpClassName, String lpWindowName);
+    WinDef.BOOL SetWindowPos(WinDef.HWND hWnd, WinDef.HWND hWndInsertAfter, int X, int Y, int cx, int cy, WinDef.UINT uFlags);
 
     int GetWindowRect(WinDef.HWND handle, int[] rect);
 

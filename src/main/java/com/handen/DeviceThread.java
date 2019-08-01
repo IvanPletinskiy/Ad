@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 
+import static com.handen.Rectangles.ADCOLONY_INSTALL_BUTTON_HORIZONTAL;
 import static com.handen.Rectangles.ADCOLONY_INSTALL_BUTTON_VERTICAL;
 import static com.handen.Rectangles.AD_BUTTON;
 import static com.handen.Rectangles.CHECK_DOWNLOAD_AVAILABLE_HORIZONTAL;
@@ -35,11 +36,10 @@ import static com.handen.Rectangles.GOOGLE_PLAY_POINT_1;
 import static com.handen.Rectangles.GOOGLE_PLAY_POINT_3;
 import static com.handen.Rectangles.GOOGLE_PLAY_POINT_4;
 import static com.handen.Rectangles.GOOGLE_PLAY_POINT_5;
-import static com.handen.Rectangles.GOOGLE_PLAY_POINT_6;
 import static com.handen.Rectangles.LAUNCHER_POINT_1;
 import static com.handen.Rectangles.LAUNCHER_POINT_2;
 import static com.handen.Rectangles.LAUNCHER_POINT_3;
-import static com.handen.Rectangles.OPEN_APP;
+import static com.handen.Rectangles.OPEN_ERUDIT;
 import static com.handen.Rectangles.OPEN_DOWNLOADED_APP_HORIZONTAL;
 import static com.handen.Rectangles.OPEN_DOWNLOADED_APP_VERTICAL;
 
@@ -55,6 +55,11 @@ arrayList.add(x);
 arrayList.add(y);
 arrayList.clone();
  */
+
+    /*
+    User32.INSTANCE.SetWindowPos(User32.INSTANCE.FindWindow(null, windowName),
+        null,0,0, 1384, 920, null);
+     */
     private Robot mRobot;
     private Device mDevice;
     private Random mRandom;
@@ -69,28 +74,29 @@ arrayList.clone();
         mRandom = new Random();
         deviceFilePath = "C:/Ad/" + mDevice.id + ".txt";
         format = new SimpleDateFormat("HH:mm:ss");
-
+     //   checkAndSetInsideGooglePlay(new AdObservable());
         Observable.just(new AdObservable())
                 .observeOn(Schedulers.io())
+                .subscribeOn(Schedulers.io())
                 .delay(2, TimeUnit.SECONDS)
                 .doOnNext(this::clickAdButton)
                 .delay(3, TimeUnit.SECONDS)
                 .filter(this::checkAdShown)
                 .doOnNext((o) -> print("After checkAdShown"))
-                .delay(40, TimeUnit.SECONDS)
+                .delay(35, TimeUnit.SECONDS)
                 .doOnNext(observable -> {
                     if(!checkAndSetInsideGooglePlay(observable))
                         //if(!checkAdPreviouslyClicked()) //Если реклама кликалась, то начнётся заново
-                            findAndClickInstallButton();
+                        findAndClickInstallButton();
                 })
                 .delay(3, TimeUnit.SECONDS)
                 .filter((o) -> !checkAdPreviouslyClicked())
-                .delay(5, TimeUnit.SECONDS)
+                .delay(4, TimeUnit.SECONDS)
                 .filter(this::checkAndSetInsideGooglePlay)
                 .filter(this::checkDownloadAvailable)
                 .doOnNext(this::installApp)
                 .doOnNext(this::openDownloadedApp)
-                .delay(10, TimeUnit.SECONDS)
+                .delay(5, TimeUnit.SECONDS)
                 .doOnComplete(() -> {
                     print("Inside onComplete");
                     openErudit();
@@ -152,6 +158,23 @@ arrayList.clone();
             return;
         }
 
+        //ADCOLONY_HORIZONTAL
+        adColonyGreenCount = 0;
+        endY = mDevice.y + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.y + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.height;
+        endX = mDevice.x + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.x + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.width;
+        for(int y = mDevice.y + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.y; y < endY; y++) {
+            for(int x = mDevice.x + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.x; x < endX; x++) {
+                int[] pixel = ColorParser.parse(screen.getRGB(x, y));
+                if(checkPixelGreenAdcolony(pixel))
+                    adColonyGreenCount++;
+            }
+        }
+        if(adColonyGreenCount > ADCOLONY_INSTALL_BUTTON_HORIZONTAL.width * ADCOLONY_INSTALL_BUTTON_HORIZONTAL.height * 0.7) {
+            print("AdColony install button horizontal found");
+            click(ADCOLONY_INSTALL_BUTTON_HORIZONTAL);
+            return;
+        }
+
         //Зелёные кнопки
         for(int y = mDevice.y; y < mDevice.y + mDevice.height; ++y) {
             for(int x = mDevice.x; x < mDevice.x + mDevice.width; ++x) {
@@ -182,6 +205,8 @@ arrayList.clone();
                         }
                     if(width + height > 105 && greenPixelsCount > width * height * 0.7) {
                         print("Green button found");
+                        x -= mDevice.x;
+                        y -= mDevice.y;
                         clickCoordinates(x, y, width, height);
                         return;
                     }
@@ -337,7 +362,7 @@ arrayList.clone();
         boolean isDownloaded = false;
         print("Wait until app downloaded...");
         while(!isDownloaded) {
-            randomSleep(5);
+            sleep(5);
             isDownloaded = checkAppDownloaded(observable);
         }
         Main.downloadedAppsCount++;
@@ -400,10 +425,9 @@ arrayList.clone();
         }
         int[] pixel4 = ColorParser.parse(screen.getRGB(mDevice.x + GOOGLE_PLAY_POINT_4.x, mDevice.y + GOOGLE_PLAY_POINT_4.y));
         int[] pixel5 = ColorParser.parse(screen.getRGB(mDevice.x + GOOGLE_PLAY_POINT_5.x, mDevice.y + GOOGLE_PLAY_POINT_5.y));
-        int[] pixel6 = ColorParser.parse(screen.getRGB(mDevice.x + GOOGLE_PLAY_POINT_6.x, mDevice.y + GOOGLE_PLAY_POINT_6.y));
+        //    int[] pixel6 = ColorParser.parse(screen.getRGB(mDevice.x + GOOGLE_PLAY_POINT_6.x, mDevice.y + GOOGLE_PLAY_POINT_6.y));
         if(pixel4[0] == 117 && pixel4[1] == 117 && pixel4[2] == 117 &&
-                pixel5[0] == 117 && pixel5[1] == 117 && pixel5[2] == 117 &&
-                pixel6[0] == 1 && pixel6[1] == 135 && pixel6[2] == 95) {
+                pixel5[0] == 117 && pixel5[1] == 117 && pixel5[2] == 117) {
             print("Current Google Play`s orientation is HORIZONTAL");
             observable.setGooglePlayVertical(false);
             return true;
@@ -453,7 +477,8 @@ arrayList.clone();
 
     private boolean checkInsideErudit() {
         BufferedImage screen = getScreen();
-        int[] pixel1 = ColorParser.parse(screen.getRGB(ERUDIT_POINT_1.x, ERUDIT_POINT_1.y));
+        int[] pixel1 = ColorParser.parse(screen.getRGB(
+                ERUDIT_POINT_1.x, ERUDIT_POINT_1.y));
         int[] pixel2 = ColorParser.parse(screen.getRGB(ERUDIT_POINT_2.x, ERUDIT_POINT_2.y));
         int[] pixel3 = ColorParser.parse(screen.getRGB(ERUDIT_POINT_3.x, ERUDIT_POINT_3.y));
         return pixel1[0] == 103 && pixel1[1] == 58 && pixel1[2] == 183 &&
@@ -467,7 +492,7 @@ arrayList.clone();
         click(CLOSE_DOWNLOADED_APP);
         sleep(3);
         if(checkInsideLauncher()) {
-            click(OPEN_APP);
+            click(OPEN_ERUDIT);
             sleep(3);
         }
         if(checkInsideErudit()) {
@@ -476,7 +501,7 @@ arrayList.clone();
         click(DEVICE_BACK_BUTTON);
         sleep(3);
         if(checkInsideLauncher()) {
-            click(OPEN_APP);
+            click(OPEN_ERUDIT);
         }
         else
             if(!checkInsideErudit()) {
@@ -508,6 +533,12 @@ arrayList.clone();
         mRobot.mousePress(MouseEvent.BUTTON1_DOWN_MASK);
         mRobot.mouseRelease(MouseEvent.BUTTON1_DOWN_MASK);
         print("Click " + rectangle.name);
+        try {
+            Thread.sleep(500);
+        }
+        catch(InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     synchronized private void clickCoordinates(int startX, int startY, int width, int height) {
@@ -521,6 +552,12 @@ arrayList.clone();
         mRobot.mousePress(MouseEvent.BUTTON1_DOWN_MASK);
         mRobot.mouseRelease(MouseEvent.BUTTON1_DOWN_MASK);
         print("Click coordinates " + x + "\t" + y);
+        try {
+            Thread.sleep(500);
+        }
+        catch(InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private boolean checkPixelGreen(int[] rgb) {
