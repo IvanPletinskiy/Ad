@@ -7,6 +7,7 @@ class Device {
 
     public Device(int id, String windowTitle) {
         this.id = id;
+        moveAndResizeWindow(windowTitle);
         int[] rect = {0,0,0,0};
         try {
             rect = getRect(windowTitle);
@@ -14,7 +15,7 @@ class Device {
         catch(Exception e) {
             e.printStackTrace();
         }
-        moveAndResizeWindow(windowTitle);
+
         x = rect[0];
         y = rect[1];
         width = rect[2] - rect[0];

@@ -74,7 +74,7 @@ arrayList.clone();
         mRandom = new Random();
         deviceFilePath = "C:/Ad/" + mDevice.id + ".txt";
         format = new SimpleDateFormat("HH:mm:ss");
-     //   checkAndSetInsideGooglePlay(new AdObservable());
+        checkAndSetInsideGooglePlay(new AdObservable());
         Observable.just(new AdObservable())
                 .observeOn(Schedulers.io())
                 .subscribeOn(Schedulers.io())

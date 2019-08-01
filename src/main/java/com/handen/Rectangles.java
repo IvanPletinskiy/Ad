@@ -6,11 +6,11 @@ class Rectangles {
     public static Rectangle GOOGLE_PLAY_INSTALL_HORIZONTAL = new Rectangle(214, 77, 25, 121, "GOOGLE_PLAY_INSTALL_HORIZONTAL");
     public static Rectangle DEVICE_BACK_BUTTON = new Rectangle(26, 967, 1, 1, "DEVICE_BACK_BUTTON");
    // public static Rectangle DEVICE_BACK_BUTTON_LARGE = new Rectangle(17, 949, 18, 12, "DEVICE_BACK_BUTTON_LARGE"); //TODO //TODO
-    public static Rectangle GOOGLE_PLAY_POINT_1 = new Rectangle(31, 91, 0, 0, "GOOGLE_PLAY_POINT_1");
+    public static Rectangle GOOGLE_PLAY_POINT_1 = new Rectangle(24, 92, 0, 0, "GOOGLE_PLAY_POINT_1");
 //    public static Rectangle GOOGLE_PLAY_POINT_2 = new Rectangle(135, 96, 0, 0, "GOOGLE_PLAY_POINT_2"); //TODO //TODO
-    public static Rectangle GOOGLE_PLAY_POINT_3 = new Rectangle(469, 97, 0, 0, "GOOGLE_PLAY_POINT_3");
-    public static Rectangle GOOGLE_PLAY_POINT_4 = new Rectangle(51, 887, 0, 0, "GOOGLE_PLAY_POINT_4");
-    public static Rectangle GOOGLE_PLAY_POINT_5 = new Rectangle(57, 70, 0, 0, "GOOGLE_PLAY_POINT_5");
+    public static Rectangle GOOGLE_PLAY_POINT_3 = new Rectangle(475, 97, 0, 0, "GOOGLE_PLAY_POINT_3");
+    public static Rectangle GOOGLE_PLAY_POINT_4 = new Rectangle(52, 894, 0, 0, "GOOGLE_PLAY_POINT_4");
+    public static Rectangle GOOGLE_PLAY_POINT_5 = new Rectangle(57, 64, 0, 0, "GOOGLE_PLAY_POINT_5");
  //   public static Rectangle GOOGLE_PLAY_POINT_6 = new Rectangle(223, 189, 0, 0, "GOOGLE_PLAY_POINT_6"); //TODO //TODO
     public static Rectangle OPEN_DOWNLOADED_APP_VERTICAL = new Rectangle(259, 147, 200, 22, "OPEN_DOWNLOADED_APP_VERTICAL");
     public static Rectangle OPEN_DOWNLOADED_APP_HORIZONTAL = new Rectangle(112, 77, 24, 113, "OPEN_DOWNLOADED_APP_HORIZONTAL");
