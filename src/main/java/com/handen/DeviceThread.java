@@ -21,27 +21,20 @@ import io.reactivex.schedulers.Schedulers;
 import static com.handen.Rectangles.ADCOLONY_INSTALL_BUTTON_HORIZONTAL;
 import static com.handen.Rectangles.ADCOLONY_INSTALL_BUTTON_VERTICAL;
 import static com.handen.Rectangles.AD_BUTTON;
-import static com.handen.Rectangles.CHECK_DOWNLOAD_AVAILABLE_HORIZONTAL;
-import static com.handen.Rectangles.CHECK_DOWNLOAD_AVAILABLE_VERTICAL;
 import static com.handen.Rectangles.CLOSE_AD_HORIZONTAL;
 import static com.handen.Rectangles.CLOSE_AD_VERTICAL;
 import static com.handen.Rectangles.CLOSE_DOWNLOADED_APP;
+import static com.handen.Rectangles.CLOSE_DOWNLOADED_APP_LARGE;
 import static com.handen.Rectangles.DEVICE_BACK_BUTTON;
 import static com.handen.Rectangles.ERUDIT_POINT_1;
 import static com.handen.Rectangles.ERUDIT_POINT_2;
 import static com.handen.Rectangles.ERUDIT_POINT_3;
-import static com.handen.Rectangles.GOOGLE_PLAY_INSTALL_HORIZONTAL;
-import static com.handen.Rectangles.GOOGLE_PLAY_INSTALL_VERTICAL;
-import static com.handen.Rectangles.GOOGLE_PLAY_POINT_1;
-import static com.handen.Rectangles.GOOGLE_PLAY_POINT_3;
-import static com.handen.Rectangles.GOOGLE_PLAY_POINT_4;
-import static com.handen.Rectangles.GOOGLE_PLAY_POINT_5;
 import static com.handen.Rectangles.LAUNCHER_POINT_1;
 import static com.handen.Rectangles.LAUNCHER_POINT_2;
 import static com.handen.Rectangles.LAUNCHER_POINT_3;
-import static com.handen.Rectangles.OPEN_ERUDIT;
 import static com.handen.Rectangles.OPEN_DOWNLOADED_APP_HORIZONTAL;
 import static com.handen.Rectangles.OPEN_DOWNLOADED_APP_VERTICAL;
+import static com.handen.Rectangles.OPEN_ERUDIT;
 
 class DeviceThread {
     /*
@@ -66,6 +59,10 @@ arrayList.clone();
     private Thread deviceThread;
     private String deviceFilePath;
     private SimpleDateFormat format;
+    /**
+     * Если больше 10 попыток посмотреть рекламу -> рестарт
+     */
+    private int watchAdAttemptsCount;
     //  private boolean isVerticalGooglePlayOrientation = true; //Текущая ориентация Google Play
 
     public DeviceThread(Device device) throws Exception {
@@ -74,31 +71,42 @@ arrayList.clone();
         mRandom = new Random();
         deviceFilePath = "C:/Ad/" + mDevice.id + ".txt";
         format = new SimpleDateFormat("HH:mm:ss");
-        checkAndSetInsideGooglePlay(new AdObservable());
+        watchAdAttemptsCount = 0;
+    //    checkInsideLauncher();
+    //    checkAndSetInsideGooglePlay(new AdObservable());
+        //     checkDownloadAvailable(new AdObservable());
+    //    findAndClickGreenButton();
+
         Observable.just(new AdObservable())
                 .observeOn(Schedulers.io())
                 .subscribeOn(Schedulers.io())
                 .delay(2, TimeUnit.SECONDS)
+              //  .filter((o) -> watchAdAttemptsCount < 5)
                 .doOnNext(this::clickAdButton)
-                .delay(3, TimeUnit.SECONDS)
-                .filter(this::checkAdShown)
-                .doOnNext((o) -> print("After checkAdShown"))
+                .filter((o) -> {
+                //    print("WatchAttamptsCount " + watchAdAttemptsCount);
+                    return watchAdAttemptsCount < 5;
+                })
+                // .delay(3, TimeUnit.SECONDS)
+                // .filter(this::checkAdShown)
+                //     .doOnNext((o) -> print("After checkAdShown"))
                 .delay(35, TimeUnit.SECONDS)
+                .filter((o) -> !checkAdPreviouslyClicked(true))
                 .doOnNext(observable -> {
+                    //checkAdPreviouslyClicked(true);
                     if(!checkAndSetInsideGooglePlay(observable))
                         //if(!checkAdPreviouslyClicked()) //Если реклама кликалась, то начнётся заново
-                        findAndClickInstallButton();
+                            findAndClickInstallButton();
                 })
-                .delay(3, TimeUnit.SECONDS)
-                .filter((o) -> !checkAdPreviouslyClicked())
                 .delay(4, TimeUnit.SECONDS)
                 .filter(this::checkAndSetInsideGooglePlay)
-                .filter(this::checkDownloadAvailable)
+                // .filter(this::checkDownloadAvailable)
                 .doOnNext(this::installApp)
-                .doOnNext(this::openDownloadedApp)
+                //     .doOnNext(this::openDownloadedApp)
                 .delay(5, TimeUnit.SECONDS)
                 .doOnComplete(() -> {
-                    print("Inside onComplete");
+              //      print("Inside onComplete");
+                    watchAdAttemptsCount = 0;
                     openErudit();
                 })
                 .repeat()
@@ -106,7 +114,15 @@ arrayList.clone();
     }
 
     private void clickAdButton(AdObservable observable) {
-        click(AD_BUTTON);
+        boolean isAdShowing = false;
+        while(!isAdShowing && watchAdAttemptsCount < 5) {
+            click(AD_BUTTON);
+            watchAdAttemptsCount++;
+            sleep(3);
+            isAdShowing = checkAdShown(observable);
+        }
+     //   watchAdAttemptsCount = 0;
+        print("Ad is showing");
     }
 
     private boolean checkAdShown(AdObservable observable) {
@@ -297,7 +313,7 @@ arrayList.clone();
      *
      * @return
      */
-    private boolean checkAdPreviouslyClicked() {
+    private boolean checkAdPreviouslyClicked(boolean isSaving) {
         print("Check ad previously clicked");
         BufferedImage screen = getScreen();
         int centerX = (mDevice.x + mDevice.width) / 2;
@@ -331,8 +347,9 @@ arrayList.clone();
                 return true;
             }
             else {
-                print("Saving ad");
-                saveAd(rgbPixels);
+                //print("Saving ad");
+                if(isSaving)
+                    saveAd(rgbPixels);
                 return false;
             }
         }
@@ -344,6 +361,23 @@ arrayList.clone();
     }
 
     private void installApp(AdObservable observable) throws InterruptedException {
+
+        if(!findAndClickGreenButton())
+            printErr("CAN'T FIND INSTALL BUTTON");
+        sleep(3);
+        print("Wait until app downloaded");
+        boolean isDownLoaded = false;
+        while(!isDownLoaded) {
+            sleep(5);
+            isDownLoaded = findAndClickGreenButton();
+        }
+        print("Opening App");
+        Main.downloadedAppsCount++;
+        System.out.println("Already downloaded: " + Main.downloadedAppsCount);
+        sleep(4);
+
+
+        /*
         if(observable.isGooglePlayVertical()) {
             click(GOOGLE_PLAY_INSTALL_VERTICAL);
             int x = mDevice.x + GOOGLE_PLAY_INSTALL_VERTICAL.x + (GOOGLE_PLAY_INSTALL_VERTICAL.width / 2);
@@ -365,9 +399,46 @@ arrayList.clone();
             sleep(5);
             isDownloaded = checkAppDownloaded(observable);
         }
-        Main.downloadedAppsCount++;
-        System.out.println("Already downloaded: " + Main.downloadedAppsCount);
-        sleep(4);
+        */
+    }
+
+    /**
+     * Поиск зелёной кнопки в Google Play и клик по ней
+     *
+     * @return boolean - isFound
+     */
+    private boolean findAndClickGreenButton() {
+        BufferedImage screen = getScreen();
+        for(int y = mDevice.y; y < mDevice.y + mDevice.height; y++) {
+            for(int x = mDevice.x; x < mDevice.x + mDevice.width; x++) {
+                int[] pixel = ColorParser.parse(screen.getRGB(x, y));
+                if(checkPixelGreenGooglePlay(pixel)) {
+                    int width = 0, height = 0;
+                    for(int currentY = y; currentY < mDevice.y + mDevice.height; ++currentY) {
+                        int[] currentPixel = ColorParser.parse(screen.getRGB(x, currentY));
+                        if(!checkPixelGreenGooglePlay(currentPixel))
+                            break;
+                        height++;
+                    }
+
+                    for(int currentX = x; currentX < mDevice.x + mDevice.width; ++currentX) {
+                        int[] currentPixel = ColorParser.parse(screen.getRGB(currentX, y));
+                        if(!checkPixelGreenGooglePlay(currentPixel))
+                            break;
+                        width++;
+                    }
+
+                    if(width > 25 && height > 25) {
+                        x -= mDevice.x;
+                        y -= mDevice.y;
+                        print("Install button found");
+                        clickCoordinates(x, y, width, height);
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -412,7 +483,34 @@ arrayList.clone();
     }
 
     private boolean checkAndSetInsideGooglePlay(AdObservable observable) {
+        BufferedImage screen = getScreen();
+        int count = 0;
+        for(int y = mDevice.y; y < mDevice.y + mDevice.height; y++) {
+            for(int x = mDevice.x; x < mDevice.x + mDevice.width; x++) {
+                int[] pixel = ColorParser.parse(screen.getRGB(x, y));
+                if(pixel[0] == 1 && pixel[1] == 135 && pixel[2] == 95)
+                    count++;
+            }
+        }
+        if(count > 4900) {
+            print("Google Play orientation is VERTICAL");
+            observable.setGooglePlayVertical(true);
+            return true;
+        }
+        else
+            if(count > 2800) {
+                print("Google Play orientation is HORIZONTAL");
+                observable.setGooglePlayVertical(false);
+                return true;
+            }
+            else {
+                print("Not inside Google Play or download unavailable");
+                observable.setGooglePlayVertical(null);
+                return false;
+            }
+        /*
         print("Check inside Google Play");
+   //     BufferedImage screen = getScreen();
         BufferedImage screen = getScreen();
         int[] pixel1 = ColorParser.parse(screen.getRGB(mDevice.x + GOOGLE_PLAY_POINT_1.x, mDevice.y + GOOGLE_PLAY_POINT_1.y));
         //   int[] pixel2 = ColorParser.parse(screen.getRGB(GOOGLE_PLAY_POINT_2.x, GOOGLE_PLAY_POINT_2.y));
@@ -435,35 +533,38 @@ arrayList.clone();
         print("Not inside Google Play");
         observable.setGooglePlayVertical(null);
         return false;
+        */
     }
 
-    private boolean checkDownloadAvailable(AdObservable observable) {
-        BufferedImage screen = getScreen();
-        Rectangle rect;
-        if(observable.isGooglePlayVertical())
-            rect = CHECK_DOWNLOAD_AVAILABLE_VERTICAL;
-        else
-            rect = CHECK_DOWNLOAD_AVAILABLE_HORIZONTAL;
-        int endX = mDevice.x + rect.x + rect.width;
-        int endY = mDevice.y + rect.y + rect.height;
-        int count = 0;
-        for(int y = mDevice.y + rect.y; y < endY; y++) {
-            for(int x = mDevice.x + rect.x; x < endX; x++) {
-                int[] pixel = ColorParser.parse(screen.getRGB(x, y));
-                if(checkPixelRed(pixel))
-                    count++;
+    /*
+        private boolean checkDownloadAvailable(AdObservable observable) {
+            BufferedImage screen = getScreen();
+            Rectangle rect;
+            if(observable.isGooglePlayVertical())
+                rect = CHECK_DOWNLOAD_AVAILABLE_VERTICAL;
+            else
+                rect = CHECK_DOWNLOAD_AVAILABLE_HORIZONTAL;
+            int endX = mDevice.x + rect.x + rect.width;
+            int endY = mDevice.y + rect.y + rect.height;
+            int count = 0;
+            for(int y = mDevice.y + rect.y; y < endY; y++) {
+                for(int x = mDevice.x + rect.x; x < endX; x++) {
+                    int[] pixel = ColorParser.parse(screen.getRGB(x, y));
+                    if(checkPixelRed(pixel))
+                        count++;
+                }
             }
+            return count < 450;
         }
-        return count < 500;
-    }
-
+    */
+    /*
     private void openDownloadedApp(AdObservable observable) {
         if(observable.isGooglePlayVertical())
             click(OPEN_DOWNLOADED_APP_VERTICAL);
         else
             click(OPEN_DOWNLOADED_APP_HORIZONTAL);
     }
-
+*/
     private boolean checkInsideLauncher() {
         BufferedImage screen = getScreen();
         int[] pixel1 = ColorParser.parse(screen.getRGB(LAUNCHER_POINT_1.x, LAUNCHER_POINT_1.y));
@@ -487,20 +588,39 @@ arrayList.clone();
     }
 
     private void openErudit() {
-        click(CLOSE_DOWNLOADED_APP);
-        sleep(3);
-        click(CLOSE_DOWNLOADED_APP);
-        sleep(3);
+        click(CLOSE_DOWNLOADED_APP_LARGE);
+        sleep(2);
+        click(CLOSE_DOWNLOADED_APP_LARGE);
+        sleep(2);
+        click(CLOSE_DOWNLOADED_APP_LARGE);
         if(checkInsideLauncher()) {
+            print("Inside launcher");
             click(OPEN_ERUDIT);
             sleep(3);
         }
         if(checkInsideErudit()) {
+            print("Inside Erudit");
+            return;
+        }
+        click(CLOSE_DOWNLOADED_APP);
+        sleep(2);
+        click(CLOSE_DOWNLOADED_APP);
+        sleep(2);
+        click(CLOSE_DOWNLOADED_APP);
+        sleep(2);
+        if(checkInsideLauncher()) {
+            print("Inside launcher");
+            click(OPEN_ERUDIT);
+            sleep(3);
+        }
+        if(checkInsideErudit()) {
+            print("Inside Erudit");
             return;
         }
         click(DEVICE_BACK_BUTTON);
         sleep(3);
         if(checkInsideLauncher()) {
+            print("Inside launcher");
             click(OPEN_ERUDIT);
         }
         else
@@ -520,6 +640,7 @@ arrayList.clone();
      * @throws IOException
      */
     private void saveAd(int[] rgbPixels) throws IOException {
+        print("Saving ad");
         BufferedWriter writer = new BufferedWriter(new FileWriter(deviceFilePath, true));
         writer.newLine();
         writer.append(rgbPixels[0] + ";" + rgbPixels[1] + ";" + rgbPixels[2]);
@@ -576,17 +697,21 @@ arrayList.clone();
         return rgb[0] == 117 && rgb[1] == 197 && rgb[2] == 62;
     }
 
+    private boolean checkPixelGreenGooglePlay(int[] rgb) {
+        return rgb[0] == 1 && rgb[1] == 135 && rgb[2] == 95;
+    }
+
     private BufferedImage getScreen() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         return mRobot.createScreenCapture(new java.awt.Rectangle(screenSize));
     }
 
     private void print(String s) {
-        System.out.println(format.format(new Date()) + "\t" + s + "\t" + "Device:" + mDevice.id);
+        System.out.println(format.format(new Date()) + "\t" + "Device:" + mDevice.id + "\t" + s);
     }
 
     private void printErr(String s) {
-        System.err.println(format.format(new Date()) + "\t" + s + "\t" + "Device:" + mDevice.id);
+        System.err.println(format.format(new Date()) + "\t" + "Device:" + mDevice.id + "\t" + s);
     }
 
     private void randomSleep(int defaultSeconds) {
