@@ -72,7 +72,7 @@ arrayList.clone();
         deviceFilePath = "C:/Ad/" + mDevice.id + ".txt";
         format = new SimpleDateFormat("HH:mm:ss");
         watchAdAttemptsCount = 0;
-    //    checkInsideLauncher();
+//        checkInsideLauncher();
     //    checkAndSetInsideGooglePlay(new AdObservable());
         //     checkDownloadAvailable(new AdObservable());
     //    findAndClickGreenButton();
@@ -572,7 +572,7 @@ arrayList.clone();
         int[] pixel3 = ColorParser.parse(screen.getRGB(LAUNCHER_POINT_3.x, LAUNCHER_POINT_3.y));
         return pixel1[0] == 255 && pixel1[1] == 255 && pixel1[2] == 255 &&
                 pixel2[0] == 255 && pixel2[1] == 69 && pixel2[2] == 58 &&
-                pixel3[0] == 0 && pixel3[1] == 208 && pixel3[2] == 255;
+                pixel3[0] == 69 && pixel3[1] == 134 && pixel3[2] == 243;
 
     }
 
