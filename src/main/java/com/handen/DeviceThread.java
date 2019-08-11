@@ -72,19 +72,20 @@ arrayList.clone();
         deviceFilePath = "C:/Ad/" + mDevice.id + ".txt";
         format = new SimpleDateFormat("HH:mm:ss");
         watchAdAttemptsCount = 0;
-//        checkInsideLauncher();
-    //    checkAndSetInsideGooglePlay(new AdObservable());
+        //        checkInsideLauncher();
+        //    checkAndSetInsideGooglePlay(new AdObservable());
         //     checkDownloadAvailable(new AdObservable());
-    //    findAndClickGreenButton();
+        //    findAndClickGreenButton();
+        checkAdPreviouslyClicked(true);
 
         Observable.just(new AdObservable())
                 .observeOn(Schedulers.io())
                 .subscribeOn(Schedulers.io())
                 .delay(2, TimeUnit.SECONDS)
-              //  .filter((o) -> watchAdAttemptsCount < 5)
+                //  .filter((o) -> watchAdAttemptsCount < 5)
                 .doOnNext(this::clickAdButton)
                 .filter((o) -> {
-                //    print("WatchAttamptsCount " + watchAdAttemptsCount);
+                    //    print("WatchAttamptsCount " + watchAdAttemptsCount);
                     return watchAdAttemptsCount < 5;
                 })
                 // .delay(3, TimeUnit.SECONDS)
@@ -96,7 +97,7 @@ arrayList.clone();
                     //checkAdPreviouslyClicked(true);
                     if(!checkAndSetInsideGooglePlay(observable))
                         //if(!checkAdPreviouslyClicked()) //Если реклама кликалась, то начнётся заново
-                            findAndClickInstallButton();
+                        findAndClickInstallButton();
                 })
                 .delay(4, TimeUnit.SECONDS)
                 .filter(this::checkAndSetInsideGooglePlay)
@@ -105,7 +106,7 @@ arrayList.clone();
                 //     .doOnNext(this::openDownloadedApp)
                 .delay(5, TimeUnit.SECONDS)
                 .doOnComplete(() -> {
-              //      print("Inside onComplete");
+                    //      print("Inside onComplete");
                     watchAdAttemptsCount = 0;
                     openErudit();
                 })
@@ -121,7 +122,7 @@ arrayList.clone();
             sleep(3);
             isAdShowing = checkAdShown(observable);
         }
-     //   watchAdAttemptsCount = 0;
+        //   watchAdAttemptsCount = 0;
         print("Ad is showing");
     }
 
@@ -316,8 +317,8 @@ arrayList.clone();
     private boolean checkAdPreviouslyClicked(boolean isSaving) {
         print("Check ad previously clicked");
         BufferedImage screen = getScreen();
-        int centerX = (mDevice.x + mDevice.width) / 2;
-        int centerY = (mDevice.y + mDevice.height) / 2;
+        int centerX = mDevice.x + mDevice.width / 2;
+        int centerY = mDevice.y + mDevice.height / 2;
         int[] rgbPixels = new int[3];
         for(int y = centerY - 50; y < centerY + 50; ++y)
             for(int x = centerX - 50; x < centerX + 50; ++x) {
@@ -333,9 +334,22 @@ arrayList.clone();
             reader = new BufferedReader(fileReader);
             String line = reader.readLine();
             boolean found = false;
-            String rgbPixelsString = rgbPixels[0] + ";" + rgbPixels[1] + ";" + rgbPixels[2];
+            //String rgbPixelsString = rgbPixels[0] + ";" + rgbPixels[1] + ";" + rgbPixels[2];
             while(line != null) {
+                /*
                 if(rgbPixelsString.equals(line.replace("\n", ""))) {
+                    found = true;
+                    break;
+                }
+                */
+                String[] linePixelsString = line.split(";");
+                int[] linePixels = new int[3];
+                for(int i = 0; i < 3; ++i)
+                    linePixels[i] = Integer.parseInt(linePixelsString[i]);
+
+                if(Math.abs(rgbPixels[0] - linePixels[0]) <= 10 &&
+                        Math.abs(rgbPixels[1] - linePixels[1]) <= 10 &&
+                        Math.abs(rgbPixels[2] - linePixels[2]) <= 10) {
                     found = true;
                     break;
                 }
@@ -592,7 +606,7 @@ arrayList.clone();
         sleep(2);
         click(CLOSE_DOWNLOADED_APP_LARGE);
         sleep(2);
-        click(CLOSE_DOWNLOADED_APP_LARGE);
+        //    click(CLOSE_DOWNLOADED_APP_LARGE);
         if(checkInsideLauncher()) {
             print("Inside launcher");
             click(OPEN_ERUDIT);
