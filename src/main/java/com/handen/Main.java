@@ -6,8 +6,8 @@ public class Main {
     public static int devicesCount = 0;
 
     public static void main(String[] args) throws Exception {
-        devicesCount++;
-/*
+      //  devicesCount++;
+
         new Thread(() -> {
             Device device0 = new Device(0, "BlueStacks");
             try {
@@ -18,7 +18,7 @@ public class Main {
             }
         }).start();
         Thread.sleep(1000);
-*/
+
 
         new Thread(() -> {
             Device device1 = new Device(1, "BlueStacks1");

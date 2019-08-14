@@ -76,7 +76,8 @@ arrayList.clone();
         //    checkAndSetInsideGooglePlay(new AdObservable());
         //     checkDownloadAvailable(new AdObservable());
         //    findAndClickGreenButton();
-        checkAdPreviouslyClicked(true);
+    //    checkAdPreviouslyClicked(true);
+//        findAndClickInstallButton();
 
         Observable.just(new AdObservable())
                 .observeOn(Schedulers.io())
@@ -336,6 +337,12 @@ arrayList.clone();
             boolean found = false;
             //String rgbPixelsString = rgbPixels[0] + ";" + rgbPixels[1] + ";" + rgbPixels[2];
             while(line != null) {
+                if(line.equals("")) {
+                    line = reader.readLine();
+                    continue;
+                }
+
+
                 /*
                 if(rgbPixelsString.equals(line.replace("\n", ""))) {
                     found = true;
