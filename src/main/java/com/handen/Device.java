@@ -4,9 +4,17 @@ import com.sun.jna.platform.win32.WinDef;
 
 class Device {
     public int id, x, y, width, height;
+    public WinDef.HWND hwnd;
 
     public Device(int id, String windowTitle) {
         this.id = id;
+        hwnd = User32.INSTANCE.FindWindow(null, windowTitle);
+
+        if(hwnd == null) {
+            hwnd = User32.INSTANCE.FindWindow(null, "BlueStacks " + windowTitle);
+            if(hwnd == null)
+                return;
+        }
         moveAndResizeWindow(windowTitle);
         int[] rect = {0,0,0,0};
         try {
@@ -31,13 +39,6 @@ class Device {
     }
 
     public int[] getRect(String windowName) throws Exception {
-        WinDef.HWND hwnd = User32.INSTANCE.FindWindow(null, windowName);
-
-        if(hwnd == null) {
-            hwnd = User32.INSTANCE.FindWindow(null, "BlueStacks " + windowName);
-            if(hwnd == null)
-                throw new Exception("Window not found");
-        }
 
         int[] rect = {0, 0, 0, 0};
         int result = User32.INSTANCE.GetWindowRect(hwnd, rect);
