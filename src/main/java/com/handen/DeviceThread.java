@@ -24,7 +24,6 @@ import static com.handen.Rectangles.AD_BUTTON;
 import static com.handen.Rectangles.CLOSE_AD_HORIZONTAL;
 import static com.handen.Rectangles.CLOSE_AD_VERTICAL;
 import static com.handen.Rectangles.CLOSE_DOWNLOADED_APP;
-import static com.handen.Rectangles.CLOSE_DOWNLOADED_APP_LARGE;
 import static com.handen.Rectangles.DEVICE_BACK_BUTTON;
 import static com.handen.Rectangles.ERUDIT_POINT_1;
 import static com.handen.Rectangles.ERUDIT_POINT_2;
@@ -83,31 +82,20 @@ arrayList.clone();
                 .observeOn(Schedulers.io())
                 .subscribeOn(Schedulers.io())
                 .delay(2, TimeUnit.SECONDS)
-                //  .filter((o) -> watchAdAttemptsCount < 5)
                 .doOnNext(this::clickAdButton)
-                .filter((o) -> {
-                    //    print("WatchAttamptsCount " + watchAdAttemptsCount);
-                    return watchAdAttemptsCount < 5;
-                })
-                // .delay(3, TimeUnit.SECONDS)
-                // .filter(this::checkAdShown)
-                //     .doOnNext((o) -> print("After checkAdShown"))
+                .filter((o) -> watchAdAttemptsCount < 5)
                 .delay(35, TimeUnit.SECONDS)
                 .filter((o) -> !checkAdPreviouslyClicked(true))
                 .doOnNext(observable -> {
-                    //checkAdPreviouslyClicked(true);
                     if(!checkAndSetInsideGooglePlay(observable))
                         //if(!checkAdPreviouslyClicked()) //Если реклама кликалась, то начнётся заново
                         findAndClickInstallButton();
                 })
                 .delay(4, TimeUnit.SECONDS)
                 .filter(this::checkAndSetInsideGooglePlay)
-                // .filter(this::checkDownloadAvailable)
                 .doOnNext(this::installApp)
-                //     .doOnNext(this::openDownloadedApp)
                 .delay(5, TimeUnit.SECONDS)
                 .doOnComplete(() -> {
-                    //      print("Inside onComplete");
                     watchAdAttemptsCount = 0;
                     openErudit();
                 })
@@ -609,10 +597,13 @@ arrayList.clone();
     }
 
     private void openErudit() {
+        /*
         click(CLOSE_DOWNLOADED_APP_LARGE);
         sleep(2);
         click(CLOSE_DOWNLOADED_APP_LARGE);
         sleep(2);
+
+
         //    click(CLOSE_DOWNLOADED_APP_LARGE);
         if(checkInsideLauncher()) {
             print("Inside launcher");
@@ -623,10 +614,15 @@ arrayList.clone();
             print("Inside Erudit");
             return;
         }
+
+         */
+        /*
         click(CLOSE_DOWNLOADED_APP);
         sleep(2);
         click(CLOSE_DOWNLOADED_APP);
         sleep(2);
+
+         */
         click(CLOSE_DOWNLOADED_APP);
         sleep(2);
         if(checkInsideLauncher()) {
