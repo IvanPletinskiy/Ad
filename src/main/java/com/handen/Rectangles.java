@@ -20,6 +20,7 @@ class Rectangles {
     public static Rectangle OPEN_ERUDIT = new Rectangle(150, 845, 1, 1, "OPEN_ERUDIT");
     public static Rectangle CLOSE_AD_HORIZONTAL = new Rectangle(479, 354, 1, 1, "CLOSE_AD_HORIZONTAL");
     public static Rectangle CLOSE_AD_VERTICAL = new Rectangle(470, 69, 1, 1, "CLOSE_AD_VERTICAL");
+    public static Rectangle CLOSE_AD_VERTICAL_1 = new Rectangle(18, 58, 1, 1, "CLOSE_AD_VERICAL_1");
     public static Rectangle LAUNCHER_POINT_1 = new Rectangle(67, 189, 0,0);
     public static Rectangle LAUNCHER_POINT_2 = new Rectangle(147, 844, 0,0);
     public static Rectangle LAUNCHER_POINT_3 = new Rectangle(351, 84, 0,0);
@@ -30,4 +31,9 @@ class Rectangles {
     public static Rectangle CHECK_DOWNLOAD_AVAILABLE_HORIZONTAL = new Rectangle(172, 51, 187, 863, "CHECK_DOWNLOAD_AVAILABLE_HORIZONTAL"); //TODO //TODO
     public static Rectangle ADCOLONY_INSTALL_BUTTON_VERTICAL = new Rectangle(187, 664, 120, 22, "ADCOLONY_INSTALL_BUTTON_VERTICAL");
     public static Rectangle ADCOLONY_INSTALL_BUTTON_HORIZONTAL = new Rectangle(262, 563, 89, 13, "ADCOLONY_INSTALL_BUTTON_HORIZONTAL");
+    public static Rectangle DELETE_APP_HORIZONTAL = new Rectangle(197, 712, 1, 1, "DELETE_APP_HORIZONTAL");
+    public static Rectangle DELETE_APP_VERTICAL = new Rectangle(130, 225, 1, 1, "DELETE_APP_VERTICAL");
+    public static Rectangle DELETE_CONFIRMATION_VERTICAL = new Rectangle(397, 508, 1, 1, "DELETE_CONFIRMATION_VERTICAL");
+    public static Rectangle DELETE_CONFIRMATION_HORIZONTAL = new Rectangle(283, 291, 1, 1, "DELETE_CONFIRMATION_HORIZONTAL");
+
 }

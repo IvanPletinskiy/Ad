@@ -23,7 +23,12 @@ import static com.handen.Rectangles.ADCOLONY_INSTALL_BUTTON_VERTICAL;
 import static com.handen.Rectangles.AD_BUTTON;
 import static com.handen.Rectangles.CLOSE_AD_HORIZONTAL;
 import static com.handen.Rectangles.CLOSE_AD_VERTICAL;
+import static com.handen.Rectangles.CLOSE_AD_VERTICAL_1;
 import static com.handen.Rectangles.CLOSE_DOWNLOADED_APP;
+import static com.handen.Rectangles.DELETE_APP_HORIZONTAL;
+import static com.handen.Rectangles.DELETE_APP_VERTICAL;
+import static com.handen.Rectangles.DELETE_CONFIRMATION_HORIZONTAL;
+import static com.handen.Rectangles.DELETE_CONFIRMATION_VERTICAL;
 import static com.handen.Rectangles.DEVICE_BACK_BUTTON;
 import static com.handen.Rectangles.ERUDIT_POINT_1;
 import static com.handen.Rectangles.ERUDIT_POINT_2;
@@ -73,7 +78,7 @@ arrayList.clone();
         format = new SimpleDateFormat("HH:mm:ss");
         watchAdAttemptsCount = 0;
         downloadsAttemptsCount = 0;
-        checkInsideLauncher();
+
 
         Observable.just(new AdObservable())
                 .observeOn(Schedulers.io())
@@ -381,6 +386,20 @@ arrayList.clone();
         if(downloadsAttemptsCount >= 240)
             return;
       //  print("Opening App");
+        if(observable.isGooglePlayVertical()) {
+            click(DELETE_APP_VERTICAL);
+            sleep(1);
+            click(DELETE_CONFIRMATION_VERTICAL);
+            sleep(2);
+        }
+        else {
+            click(DELETE_APP_HORIZONTAL);
+            sleep(1);
+            click(DELETE_CONFIRMATION_HORIZONTAL);
+            sleep(2);
+        }
+
+
         Main.downloadedAppsCount++;
         System.out.println("Already downloaded: " + Main.downloadedAppsCount);
         //sleep(4);
@@ -554,6 +573,7 @@ arrayList.clone();
         else
             if(!checkInsideErudit()) {
                 click(CLOSE_AD_VERTICAL);
+                click(CLOSE_AD_VERTICAL_1);
                 click(CLOSE_AD_HORIZONTAL);
                 sleep(3);
                 if(!checkInsideErudit())
