@@ -62,6 +62,7 @@ arrayList.clone();
      * Если больше 10 попыток посмотреть рекламу -> рестарт
      */
     private int watchAdAttemptsCount;
+    private int downloadsAttemptsCount;
     //  private boolean isVerticalGooglePlayOrientation = true; //Текущая ориентация Google Play
 
     public DeviceThread(Device device) throws Exception {
@@ -71,6 +72,7 @@ arrayList.clone();
         deviceFilePath = "C:/Ad/" + mDevice.id + ".txt";
         format = new SimpleDateFormat("HH:mm:ss");
         watchAdAttemptsCount = 0;
+        downloadsAttemptsCount = 0;
 
         Observable.just(new AdObservable())
                 .observeOn(Schedulers.io())
@@ -91,6 +93,7 @@ arrayList.clone();
                 .delay(5, TimeUnit.SECONDS)
                 .doOnComplete(() -> {
                     watchAdAttemptsCount = 0;
+                    downloadsAttemptsCount = 0;
                     openErudit();
                 })
                 .repeat()
@@ -362,20 +365,24 @@ arrayList.clone();
     }
 
     private void installApp(AdObservable observable) throws InterruptedException {
-
-        if(!findAndClickGreenButton())
+        if(!findAndClickGreenButton()) {
             printErr("CAN'T FIND INSTALL BUTTON");
+            return;
+        }
         sleep(3);
         print("Wait until app downloaded");
         boolean isDownLoaded = false;
-        while(!isDownLoaded) {
+        while(!isDownLoaded && downloadsAttemptsCount < 240 ) {
+            downloadsAttemptsCount++;
             sleep(5);
             isDownLoaded = findAndClickGreenButton();
         }
-        print("Opening App");
+        if(downloadsAttemptsCount >= 240)
+            return;
+      //  print("Opening App");
         Main.downloadedAppsCount++;
         System.out.println("Already downloaded: " + Main.downloadedAppsCount);
-        sleep(4);
+        //sleep(4);
     }
 
     /**
