@@ -532,7 +532,8 @@ arrayList.clone();
     }
 
     private void openErudit() {
-
+        click(CLOSE_DOWNLOADED_APP);
+        sleep(2);
         click(CLOSE_DOWNLOADED_APP);
         sleep(2);
         if(checkInsideLauncher()) {
