@@ -71,12 +71,6 @@ arrayList.clone();
         deviceFilePath = "C:/Ad/" + mDevice.id + ".txt";
         format = new SimpleDateFormat("HH:mm:ss");
         watchAdAttemptsCount = 0;
-        //        checkInsideLauncher();
-        //    checkAndSetInsideGooglePlay(new AdObservable());
-        //     checkDownloadAvailable(new AdObservable());
-        //    findAndClickGreenButton();
-    //    checkAdPreviouslyClicked(true);
-//        findAndClickInstallButton();
 
         Observable.just(new AdObservable())
                 .observeOn(Schedulers.io())
@@ -111,7 +105,6 @@ arrayList.clone();
             sleep(3);
             isAdShowing = checkAdShown(observable);
         }
-        //   watchAdAttemptsCount = 0;
         print("Ad is showing");
     }
 
@@ -133,10 +126,8 @@ arrayList.clone();
                     if(rgb1[i] != rgb2[i])
                         mismatches++;
                 }
-                if(mismatches > 50) {
-                    print("Ad is shown");
+                if(mismatches > 50)
                     return true;
-                }
             }
         }
         print("Ad is not shown");
@@ -384,31 +375,6 @@ arrayList.clone();
         Main.downloadedAppsCount++;
         System.out.println("Already downloaded: " + Main.downloadedAppsCount);
         sleep(4);
-
-
-        /*
-        if(observable.isGooglePlayVertical()) {
-            click(GOOGLE_PLAY_INSTALL_VERTICAL);
-            int x = mDevice.x + GOOGLE_PLAY_INSTALL_VERTICAL.x + (GOOGLE_PLAY_INSTALL_VERTICAL.width / 2);
-            int y = mDevice.y + GOOGLE_PLAY_INSTALL_VERTICAL.y + GOOGLE_PLAY_INSTALL_VERTICAL.height + 8;
-            Thread.sleep(100);
-            clickCoordinates(x, y, 1, 1);
-        }
-        else {
-            click(GOOGLE_PLAY_INSTALL_HORIZONTAL);
-            int x = mDevice.x + GOOGLE_PLAY_INSTALL_HORIZONTAL.x + GOOGLE_PLAY_INSTALL_HORIZONTAL.width + 10;
-            int y = mDevice.y + GOOGLE_PLAY_INSTALL_HORIZONTAL.y + (GOOGLE_PLAY_INSTALL_HORIZONTAL.height / 2);
-            Thread.sleep(100);
-            clickCoordinates(x, y, 1, 1);
-        }
-
-        boolean isDownloaded = false;
-        print("Wait until app downloaded...");
-        while(!isDownloaded) {
-            sleep(5);
-            isDownloaded = checkAppDownloaded(observable);
-        }
-        */
     }
 
     /**
@@ -517,63 +483,9 @@ arrayList.clone();
                 observable.setGooglePlayVertical(null);
                 return false;
             }
-        /*
-        print("Check inside Google Play");
-   //     BufferedImage screen = getScreen();
-        BufferedImage screen = getScreen();
-        int[] pixel1 = ColorParser.parse(screen.getRGB(mDevice.x + GOOGLE_PLAY_POINT_1.x, mDevice.y + GOOGLE_PLAY_POINT_1.y));
-        //   int[] pixel2 = ColorParser.parse(screen.getRGB(GOOGLE_PLAY_POINT_2.x, GOOGLE_PLAY_POINT_2.y));
-        int[] pixel3 = ColorParser.parse(screen.getRGB(mDevice.x + GOOGLE_PLAY_POINT_3.x, mDevice.y + GOOGLE_PLAY_POINT_3.y));
-        if(pixel1[0] == 117 && pixel1[1] == 117 && pixel1[2] == 117 &&
-                pixel3[0] == 117 && pixel3[1] == 117 && pixel3[2] == 117) {
-            print("Current Google Play`s orientation is VERTICAL");
-            observable.setGooglePlayVertical(true);
-            return true;
-        }
-        int[] pixel4 = ColorParser.parse(screen.getRGB(mDevice.x + GOOGLE_PLAY_POINT_4.x, mDevice.y + GOOGLE_PLAY_POINT_4.y));
-        int[] pixel5 = ColorParser.parse(screen.getRGB(mDevice.x + GOOGLE_PLAY_POINT_5.x, mDevice.y + GOOGLE_PLAY_POINT_5.y));
-        //    int[] pixel6 = ColorParser.parse(screen.getRGB(mDevice.x + GOOGLE_PLAY_POINT_6.x, mDevice.y + GOOGLE_PLAY_POINT_6.y));
-        if(pixel4[0] == 117 && pixel4[1] == 117 && pixel4[2] == 117 &&
-                pixel5[0] == 117 && pixel5[1] == 117 && pixel5[2] == 117) {
-            print("Current Google Play`s orientation is HORIZONTAL");
-            observable.setGooglePlayVertical(false);
-            return true;
-        }
-        print("Not inside Google Play");
-        observable.setGooglePlayVertical(null);
-        return false;
-        */
+
     }
 
-    /*
-        private boolean checkDownloadAvailable(AdObservable observable) {
-            BufferedImage screen = getScreen();
-            Rectangle rect;
-            if(observable.isGooglePlayVertical())
-                rect = CHECK_DOWNLOAD_AVAILABLE_VERTICAL;
-            else
-                rect = CHECK_DOWNLOAD_AVAILABLE_HORIZONTAL;
-            int endX = mDevice.x + rect.x + rect.width;
-            int endY = mDevice.y + rect.y + rect.height;
-            int count = 0;
-            for(int y = mDevice.y + rect.y; y < endY; y++) {
-                for(int x = mDevice.x + rect.x; x < endX; x++) {
-                    int[] pixel = ColorParser.parse(screen.getRGB(x, y));
-                    if(checkPixelRed(pixel))
-                        count++;
-                }
-            }
-            return count < 450;
-        }
-    */
-    /*
-    private void openDownloadedApp(AdObservable observable) {
-        if(observable.isGooglePlayVertical())
-            click(OPEN_DOWNLOADED_APP_VERTICAL);
-        else
-            click(OPEN_DOWNLOADED_APP_HORIZONTAL);
-    }
-*/
     private boolean checkInsideLauncher() {
         BufferedImage screen = getScreen();
         int[] pixel1 = ColorParser.parse(screen.getRGB(LAUNCHER_POINT_1.x, LAUNCHER_POINT_1.y));
