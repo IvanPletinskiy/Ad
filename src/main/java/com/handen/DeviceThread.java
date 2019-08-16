@@ -75,7 +75,7 @@ arrayList.clone();
         Observable.just(new AdObservable())
                 .observeOn(Schedulers.io())
                 .subscribeOn(Schedulers.io())
-                .delay(2, TimeUnit.SECONDS)
+                .delay(1, TimeUnit.SECONDS)
                 .doOnNext(this::clickAdButton)
                 .filter((o) -> watchAdAttemptsCount < 5)
                 .delay(35, TimeUnit.SECONDS)
@@ -105,7 +105,8 @@ arrayList.clone();
             sleep(3);
             isAdShowing = checkAdShown(observable);
         }
-        print("Ad is showing");
+        if(isAdShowing)
+            print("Ad is showing");
     }
 
     private boolean checkAdShown(AdObservable observable) {
