@@ -22,7 +22,7 @@ class Rectangles {
     public static Rectangle CLOSE_AD_VERTICAL = new Rectangle(470, 69, 1, 1, "CLOSE_AD_VERTICAL");
     public static Rectangle LAUNCHER_POINT_1 = new Rectangle(67, 189, 0,0);
     public static Rectangle LAUNCHER_POINT_2 = new Rectangle(147, 844, 0,0);
-    public static Rectangle LAUNCHER_POINT_3 = new Rectangle(325, 82, 0,0);
+    public static Rectangle LAUNCHER_POINT_3 = new Rectangle(351, 84, 0,0);
     public static Rectangle ERUDIT_POINT_1 = new Rectangle(11, 83, 0, 0);
     public static Rectangle ERUDIT_POINT_2 = new Rectangle(448, 71, 0, 0);
     public static Rectangle ERUDIT_POINT_3 = new Rectangle(223, 178, 0, 0);

@@ -73,6 +73,7 @@ arrayList.clone();
         format = new SimpleDateFormat("HH:mm:ss");
         watchAdAttemptsCount = 0;
         downloadsAttemptsCount = 0;
+        checkInsideLauncher();
 
         Observable.just(new AdObservable())
                 .observeOn(Schedulers.io())
@@ -365,7 +366,7 @@ arrayList.clone();
     }
 
     private void installApp(AdObservable observable) throws InterruptedException {
-        if(!findAndClickGreenButton()) {
+        if(!findAndClickGreenButton(true)) {
             printErr("CAN'T FIND INSTALL BUTTON");
             return;
         }
@@ -375,7 +376,7 @@ arrayList.clone();
         while(!isDownLoaded && downloadsAttemptsCount < 240 ) {
             downloadsAttemptsCount++;
             sleep(5);
-            isDownLoaded = findAndClickGreenButton();
+            isDownLoaded = findAndClickGreenButton(false);
         }
         if(downloadsAttemptsCount >= 240)
             return;
@@ -390,7 +391,7 @@ arrayList.clone();
      *
      * @return boolean - isFound
      */
-    private boolean findAndClickGreenButton() {
+    private boolean findAndClickGreenButton(boolean isClicking) {
         BufferedImage screen = getScreen();
         for(int y = mDevice.y; y < mDevice.y + mDevice.height; y++) {
             for(int x = mDevice.x; x < mDevice.x + mDevice.width; x++) {
@@ -415,7 +416,8 @@ arrayList.clone();
                         x -= mDevice.x;
                         y -= mDevice.y;
                         print("Install button found");
-                        clickCoordinates(x, y, width, height);
+                        if(isClicking)
+                            clickCoordinates(x, y, width, height);
                         return true;
                     }
                 }
@@ -499,10 +501,16 @@ arrayList.clone();
         int[] pixel1 = ColorParser.parse(screen.getRGB(LAUNCHER_POINT_1.x, LAUNCHER_POINT_1.y));
         int[] pixel2 = ColorParser.parse(screen.getRGB(LAUNCHER_POINT_2.x, LAUNCHER_POINT_2.y));
         int[] pixel3 = ColorParser.parse(screen.getRGB(LAUNCHER_POINT_3.x, LAUNCHER_POINT_3.y));
-        return pixel1[0] == 255 && pixel1[1] == 255 && pixel1[2] == 255 &&
+        if (pixel1[0] == 255 && pixel1[1] == 255 && pixel1[2] == 255 &&
                 pixel2[0] == 255 && pixel2[1] == 69 && pixel2[2] == 58 &&
-                pixel3[0] == 69 && pixel3[1] == 134 && pixel3[2] == 243;
-
+                pixel3[0] == 69 && pixel3[1] > 130 && pixel3[1] < 140 && pixel3[2] == 243) {
+            print("Inside launcher");
+            return true;
+        }
+        else {
+            print("Not inside launcher");
+            return false;
+        }
     }
 
     private boolean checkInsideErudit() {
@@ -511,38 +519,20 @@ arrayList.clone();
                 ERUDIT_POINT_1.x, ERUDIT_POINT_1.y));
         int[] pixel2 = ColorParser.parse(screen.getRGB(ERUDIT_POINT_2.x, ERUDIT_POINT_2.y));
         int[] pixel3 = ColorParser.parse(screen.getRGB(ERUDIT_POINT_3.x, ERUDIT_POINT_3.y));
-        return pixel1[0] == 103 && pixel1[1] == 58 && pixel1[2] == 183 &&
+        if(pixel1[0] == 103 && pixel1[1] == 58 && pixel1[2] == 183 &&
                 pixel2[0] == 244 && pixel2[1] == 67 && pixel2[2] == 54 &&
-                pixel3[0] == 255 && pixel3[1] == 255 && pixel3[2] == 225;
+                pixel3[0] == 255 && pixel3[1] == 255 && pixel3[2] == 225) {
+            print("Inside Erudit");
+            return true;
+        }
+        else {
+            print("Not inside Erudit");
+            return false;
+        }
     }
 
     private void openErudit() {
-        /*
-        click(CLOSE_DOWNLOADED_APP_LARGE);
-        sleep(2);
-        click(CLOSE_DOWNLOADED_APP_LARGE);
-        sleep(2);
 
-
-        //    click(CLOSE_DOWNLOADED_APP_LARGE);
-        if(checkInsideLauncher()) {
-            print("Inside launcher");
-            click(OPEN_ERUDIT);
-            sleep(3);
-        }
-        if(checkInsideErudit()) {
-            print("Inside Erudit");
-            return;
-        }
-
-         */
-        /*
-        click(CLOSE_DOWNLOADED_APP);
-        sleep(2);
-        click(CLOSE_DOWNLOADED_APP);
-        sleep(2);
-
-         */
         click(CLOSE_DOWNLOADED_APP);
         sleep(2);
         if(checkInsideLauncher()) {
