@@ -35,7 +35,6 @@ import static com.handen.Rectangles.ERUDIT_POINT_2;
 import static com.handen.Rectangles.ERUDIT_POINT_3;
 import static com.handen.Rectangles.LAUNCHER_POINT_1;
 import static com.handen.Rectangles.LAUNCHER_POINT_2;
-import static com.handen.Rectangles.LAUNCHER_POINT_3;
 import static com.handen.Rectangles.OPEN_DOWNLOADED_APP_HORIZONTAL;
 import static com.handen.Rectangles.OPEN_DOWNLOADED_APP_VERTICAL;
 import static com.handen.Rectangles.OPEN_ERUDIT;
@@ -79,6 +78,7 @@ arrayList.clone();
         watchAdAttemptsCount = 0;
         downloadsAttemptsCount = 0;
 
+      //  checkInsideErudit();
 
         Observable.just(new AdObservable())
                 .observeOn(Schedulers.io())
@@ -108,7 +108,7 @@ arrayList.clone();
 
     private void clickAdButton(AdObservable observable) {
         boolean isAdShowing = false;
-        while(!isAdShowing && watchAdAttemptsCount < 5) {
+        while(!isAdShowing && watchAdAttemptsCount < 5 && checkInsideErudit()) {
             click(AD_BUTTON);
             watchAdAttemptsCount++;
             sleep(3);
@@ -294,8 +294,8 @@ arrayList.clone();
         }
         //Если не была найдена кнопка установки - клик по центру экрана
         print("No button found");
-        int x = (mDevice.x + mDevice.width) / 2;
-        int y = (mDevice.y + mDevice.height) / 2;
+        int x = mDevice.x + mDevice.width / 2;
+        int y = mDevice.y + mDevice.height / 2;
         clickCoordinates(x, y, 0, 0);
     }
 
@@ -378,14 +378,15 @@ arrayList.clone();
         sleep(3);
         print("Wait until app downloaded");
         boolean isDownLoaded = false;
-        while(!isDownLoaded && downloadsAttemptsCount < 240 ) {
+        while(!isDownLoaded && downloadsAttemptsCount < 240) {
             downloadsAttemptsCount++;
             sleep(5);
             isDownLoaded = findAndClickGreenButton(false);
         }
         if(downloadsAttemptsCount >= 240)
             return;
-      //  print("Opening App");
+        //  print("Opening App");
+
         if(observable.isGooglePlayVertical()) {
             click(DELETE_APP_VERTICAL);
             sleep(1);
@@ -398,7 +399,6 @@ arrayList.clone();
             click(DELETE_CONFIRMATION_HORIZONTAL);
             sleep(2);
         }
-
 
         Main.downloadedAppsCount++;
         System.out.println("Already downloaded: " + Main.downloadedAppsCount);
@@ -431,7 +431,15 @@ arrayList.clone();
                         width++;
                     }
 
-                    if(width > 25 && height > 25) {
+                    int greenPixelsCount = 0;
+                    for(int currentY = y; currentY < mDevice.y + y + height; ++currentY)
+                        for(int currentX = x; currentX < mDevice.x + x + width; ++currentX) {
+                            int[] currentPixel = ColorParser.parse(screen.getRGB(currentX, currentY));
+                            if(checkPixelGreenGooglePlay(currentPixel))
+                                greenPixelsCount++;
+                        }
+
+                    if(width > 25 && height > 25 && greenPixelsCount > width * height * 0.7) {
                         x -= mDevice.x;
                         y -= mDevice.y;
                         print("Install button found");
@@ -517,12 +525,12 @@ arrayList.clone();
 
     private boolean checkInsideLauncher() {
         BufferedImage screen = getScreen();
-        int[] pixel1 = ColorParser.parse(screen.getRGB(LAUNCHER_POINT_1.x, LAUNCHER_POINT_1.y));
-        int[] pixel2 = ColorParser.parse(screen.getRGB(LAUNCHER_POINT_2.x, LAUNCHER_POINT_2.y));
-        int[] pixel3 = ColorParser.parse(screen.getRGB(LAUNCHER_POINT_3.x, LAUNCHER_POINT_3.y));
-        if (pixel1[0] == 255 && pixel1[1] == 255 && pixel1[2] == 255 &&
-                pixel2[0] == 255 && pixel2[1] == 69 && pixel2[2] == 58 &&
-                pixel3[0] == 69 && pixel3[1] > 130 && pixel3[1] < 140 && pixel3[2] == 243) {
+        int[] pixel1 = ColorParser.parse(screen.getRGB(mDevice.x + LAUNCHER_POINT_1.x, mDevice.y + LAUNCHER_POINT_1.y));
+        int[] pixel2 = ColorParser.parse(screen.getRGB(mDevice.x + LAUNCHER_POINT_2.x, mDevice.y + LAUNCHER_POINT_2.y));
+        //int[] pixel3 = ColorParser.parse(screen.getRGB(LAUNCHER_POINT_3.x, LAUNCHER_POINT_3.y));
+        if(pixel1[0] == 255 && pixel1[1] == 255 && pixel1[2] == 255 &&
+                pixel2[0] == 255 && pixel2[1] == 69 && pixel2[2] == 58) {
+            // pixel3[0] == 69 && pixel3[1] > 130 && pixel3[1] < 140 && pixel3[2] == 243) {
             print("Inside launcher");
             return true;
         }
@@ -532,12 +540,12 @@ arrayList.clone();
         }
     }
 
-    private boolean checkInsideErudit() {
+    private boolean   checkInsideErudit() {
         BufferedImage screen = getScreen();
-        int[] pixel1 = ColorParser.parse(screen.getRGB(
-                ERUDIT_POINT_1.x, ERUDIT_POINT_1.y));
-        int[] pixel2 = ColorParser.parse(screen.getRGB(ERUDIT_POINT_2.x, ERUDIT_POINT_2.y));
-        int[] pixel3 = ColorParser.parse(screen.getRGB(ERUDIT_POINT_3.x, ERUDIT_POINT_3.y));
+        int[] pixel1 = ColorParser.parse(screen.getRGB(mDevice.x +
+                ERUDIT_POINT_1.x, mDevice.y + ERUDIT_POINT_1.y));
+        int[] pixel2 = ColorParser.parse(screen.getRGB(mDevice.x + ERUDIT_POINT_2.x, mDevice.y + ERUDIT_POINT_2.y));
+        int[] pixel3 = ColorParser.parse(screen.getRGB(mDevice.x + ERUDIT_POINT_3.x, mDevice.y + ERUDIT_POINT_3.y));
         if(pixel1[0] == 103 && pixel1[1] == 58 && pixel1[2] == 183 &&
                 pixel2[0] == 244 && pixel2[1] == 67 && pixel2[2] == 54 &&
                 pixel3[0] == 255 && pixel3[1] == 255 && pixel3[2] == 225) {
@@ -583,7 +591,6 @@ arrayList.clone();
 
     /**
      * Сохранение в файл характеристики рекламы
-     *
      * @param rgbPixels
      * @throws IOException
      */
