@@ -78,7 +78,8 @@ arrayList.clone();
         watchAdAttemptsCount = 0;
         downloadsAttemptsCount = 0;
 
-      //  checkInsideErudit();
+        //  checkInsideErudit();
+        checkAndSetInsideGooglePlay(new AdObservable());
 
         Observable.just(new AdObservable())
                 .observeOn(Schedulers.io())
@@ -495,6 +496,7 @@ arrayList.clone();
     }
 
     private boolean checkAndSetInsideGooglePlay(AdObservable observable) {
+        /*
         BufferedImage screen = getScreen();
         int count = 0;
         for(int y = mDevice.y; y < mDevice.y + mDevice.height; y++) {
@@ -521,16 +523,68 @@ arrayList.clone();
                 return false;
             }
 
+         */
+        BufferedImage screen = getScreen();
+        for(int y = mDevice.y; y < mDevice.y + mDevice.height; y++) {
+            for(int x = mDevice.x; x < mDevice.x + mDevice.width; x++) {
+                int[] pixel = ColorParser.parse(screen.getRGB(x, y));
+                if(checkPixelGreenGooglePlay(pixel)) {
+                    int width = 0, height = 0;
+                    for(int currentY = y; currentY < mDevice.y + mDevice.height; ++currentY) {
+                        int[] currentPixel = ColorParser.parse(screen.getRGB(x, currentY));
+                        if(!checkPixelGreenGooglePlay(currentPixel))
+                            break;
+                        height++;
+                    }
+
+                    for(int currentX = x; currentX < mDevice.x + mDevice.width; ++currentX) {
+                        int[] currentPixel = ColorParser.parse(screen.getRGB(currentX, y));
+                        if(!checkPixelGreenGooglePlay(currentPixel))
+                            break;
+                        width++;
+                    }
+
+                    int greenPixelsCount = 0;
+                    for(int currentY = y; currentY < mDevice.y + y + height; ++currentY)
+                        for(int currentX = x; currentX < mDevice.x + x + width; ++currentX) {
+                            int[] currentPixel = ColorParser.parse(screen.getRGB(currentX, currentY));
+                            if(checkPixelGreenGooglePlay(currentPixel))
+                                greenPixelsCount++;
+                        }
+
+                    if(width > 25 && height > 25 && greenPixelsCount > width * height * 0.7) {
+                        if(width > height) {
+                            print("Google Play orientation is VERTICAL");
+                            observable.setGooglePlayVertical(true);
+                            return true;
+                        }
+                        else {
+                            if(height < 150) {
+                                print("Google Play orientation is HORIZONTAL");
+                                observable.setGooglePlayVertical(false);
+                                return true;
+                            }
+                            else {
+                                //Кнопка зарегистрироваться  или вне гугл плей
+                                print("Not inside Google Play or download unavailable");
+                                observable.setGooglePlayVertical(null);
+                                return false;
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     private boolean checkInsideLauncher() {
         BufferedImage screen = getScreen();
         int[] pixel1 = ColorParser.parse(screen.getRGB(mDevice.x + LAUNCHER_POINT_1.x, mDevice.y + LAUNCHER_POINT_1.y));
         int[] pixel2 = ColorParser.parse(screen.getRGB(mDevice.x + LAUNCHER_POINT_2.x, mDevice.y + LAUNCHER_POINT_2.y));
-        //int[] pixel3 = ColorParser.parse(screen.getRGB(LAUNCHER_POINT_3.x, LAUNCHER_POINT_3.y));
         if(pixel1[0] == 255 && pixel1[1] == 255 && pixel1[2] == 255 &&
                 pixel2[0] == 255 && pixel2[1] == 69 && pixel2[2] == 58) {
-            // pixel3[0] == 69 && pixel3[1] > 130 && pixel3[1] < 140 && pixel3[2] == 243) {
             print("Inside launcher");
             return true;
         }
@@ -540,7 +594,7 @@ arrayList.clone();
         }
     }
 
-    private boolean   checkInsideErudit() {
+    private boolean checkInsideErudit() {
         BufferedImage screen = getScreen();
         int[] pixel1 = ColorParser.parse(screen.getRGB(mDevice.x +
                 ERUDIT_POINT_1.x, mDevice.y + ERUDIT_POINT_1.y));
@@ -591,6 +645,7 @@ arrayList.clone();
 
     /**
      * Сохранение в файл характеристики рекламы
+     *
      * @param rgbPixels
      * @throws IOException
      */
