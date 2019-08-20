@@ -19,7 +19,7 @@ public class Main {
                     e.printStackTrace();
                 }
             }).start();
-            Thread.sleep(1000);
+            //Thread.sleep(1000);
         }
 
         if(device1.hwnd != null) {
@@ -31,7 +31,7 @@ public class Main {
                     e.printStackTrace();
                 }
             }).start();
-            Thread.sleep(1000);
+           // Thread.sleep(1000);
         }
 
         if(device2.hwnd != null) {
