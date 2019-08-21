@@ -56,7 +56,6 @@ arrayList.clone();
     private Robot mRobot;
     private Device mDevice;
     private Random mRandom;
-    private Thread deviceThread;
     private String deviceFilePath;
     private SimpleDateFormat format;
     /**
@@ -89,7 +88,6 @@ arrayList.clone();
                     }
                 })
                 .delay(4, TimeUnit.SECONDS)
-             //   .filter(this::checkInsideGooglePlay)
                 .doOnNext((o) -> saveAd())
                 .doOnNext(this::installApp)
                 .doOnComplete(() -> {
@@ -139,139 +137,6 @@ arrayList.clone();
         return false;
     }
 
-    private void findAndClickInstallButton() {
-        BufferedImage screen = getScreen();
-        print("Searching install button");
-
-        //ADCOLONY_VERTICAL
-        int endY = mDevice.y + ADCOLONY_INSTALL_BUTTON_VERTICAL.y + ADCOLONY_INSTALL_BUTTON_VERTICAL.height;
-        int endX = mDevice.x + ADCOLONY_INSTALL_BUTTON_VERTICAL.x + ADCOLONY_INSTALL_BUTTON_VERTICAL.width;
-        int adColonyGreenCount = getPixelsCountInArea(this::checkPixelGreenAdcolony,
-                mDevice.x + ADCOLONY_INSTALL_BUTTON_VERTICAL.x, mDevice.y + ADCOLONY_INSTALL_BUTTON_VERTICAL.y, endX, endY);
-        if(adColonyGreenCount > ADCOLONY_INSTALL_BUTTON_VERTICAL.width * ADCOLONY_INSTALL_BUTTON_VERTICAL.height * 0.7) {
-            print("AdColony install button vertical found");
-            click(ADCOLONY_INSTALL_BUTTON_VERTICAL);
-            return;
-        }
-
-        //ADCOLONY_HORIZONTAL
-        endY = mDevice.y + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.y + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.height;
-        endX = mDevice.x + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.x + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.width;
-        adColonyGreenCount = getPixelsCountInArea(this::checkPixelGreenAdcolony,
-                mDevice.x + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.x, mDevice.y + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.y, endX, endY);
-        if(adColonyGreenCount > ADCOLONY_INSTALL_BUTTON_HORIZONTAL.width * ADCOLONY_INSTALL_BUTTON_HORIZONTAL.height * 0.7) {
-            print("AdColony install button horizontal found");
-            click(ADCOLONY_INSTALL_BUTTON_HORIZONTAL);
-            return;
-        }
-
-        //Зелёные кнопки
-        for(int y = mDevice.y; y < mDevice.y + mDevice.height; ++y) {
-            for(int x = mDevice.x; x < mDevice.x + mDevice.width; ++x) {
-                int[] pixel = ColorParser.parse(screen.getRGB(x, y));
-                //Ищем зелёную кнопку
-                if(checkPixelGreen(pixel)) {
-                    int width = 0, height = 0;
-                    for(int currentY = y; currentY < mDevice.y + mDevice.height; ++currentY) {
-                        int[] currentPixel = ColorParser.parse(screen.getRGB(x, currentY));
-                        if(!checkPixelGreen(currentPixel))
-                            break;
-                        height++;
-                    }
-
-                    for(int currentX = x; currentX < mDevice.x + mDevice.width; ++currentX) {
-                        int[] currentPixel = ColorParser.parse(screen.getRGB(currentX, y));
-                        if(!checkPixelGreen(currentPixel))
-                            break;
-                        width++;
-                    }
-                    //Подсчёт зелёных пикселей в области
-                    int greenPixelsCount = getPixelsCountInArea(this::checkPixelGreen,
-                            x, y, mDevice.x + x + width, mDevice.y + y + height);
-                    if(width + height > 105 && greenPixelsCount > width * height * 0.7) {
-                        print("Green button found");
-                        x -= mDevice.x;
-                        y -= mDevice.y;
-                        clickCoordinates(x, y, width, height);
-                        return;
-                    }
-                }
-            }
-        }
-        //Красные кнопки
-        for(int y = mDevice.y; y < mDevice.y + mDevice.height; ++y) {
-            for(int x = mDevice.x; x < mDevice.x + mDevice.width; ++x) {
-                int[] pixel = ColorParser.parse(screen.getRGB(x, y));
-                if(checkPixelRed(pixel)) {
-                    int width = 0, height = 0;
-                    for(int currentY = y; currentY < mDevice.y + mDevice.height; ++currentY) {
-                        int[] currentPixel = ColorParser.parse(screen.getRGB(x, currentY));
-                        if(!checkPixelRed(currentPixel))
-                            break;
-                        height++;
-                    }
-
-                    for(int currentX = x; currentX < mDevice.x + mDevice.width; ++currentX) {
-                        int[] currentPixel = ColorParser.parse(screen.getRGB(currentX, y));
-                        if(!checkPixelRed(currentPixel))
-                            break;
-                        width++;
-                    }
-                    //Подсчёт красных пикселей в области
-                    int redPixelsCount = getPixelsCountInArea(this::checkPixelRed,
-                            x, y, mDevice.x + x + width, mDevice.y + y + height);
-
-                    if(width + height > 105 && redPixelsCount > width * height * 0.7) {
-                        print("Red button found");
-                        clickCoordinates(x, y, width, height);
-                        return;
-                    }
-                }
-            }
-        }
-        //Синие кнопки
-        for(int y = mDevice.y + 2; y < mDevice.y + mDevice.height - 2; ++y) {
-            for(int x = mDevice.x + 2; x < mDevice.x + mDevice.width - 2; ++x) {
-                int[] pixel = ColorParser.parse(screen.getRGB(x, y));
-                //Ищем зелёную кнопку
-                if(checkPixelBlue(pixel)) {
-                    int width = 0, height = 0;
-                    for(int currentY = y; currentY < mDevice.y + mDevice.height - 2; ++currentY) {
-                        int[] currentPixel = ColorParser.parse(screen.getRGB(x, currentY));
-                        if(!checkPixelBlue(currentPixel))
-                            break;
-                        height++;
-                    }
-
-                    for(int currentX = x; currentX < mDevice.x + mDevice.width - 2; ++currentX) {
-                        int[] currentPixel = ColorParser.parse(screen.getRGB(currentX, y));
-                        if(!checkPixelBlue(currentPixel))
-                            break;
-                        width++;
-                    }
-                    //Подсчёт синих пикселей в области
-                    int bluePixelsCount = getPixelsCountInArea(this::checkPixelBlue,
-                            x, y, mDevice.x + x + width, mDevice.y + y + height);
-                    if(width + height > 105 && bluePixelsCount > width * height * 0.7) {
-                        print("Blue button found");
-                        clickCoordinates(x, y, width, height);
-                        return;
-                    }
-                }
-            }
-        }
-        //Если не была найдена кнопка установки - клик по центру экрана
-        print("No button found");
-        int x = mDevice.x + mDevice.width / 2;
-        int y = mDevice.y + mDevice.height / 2;
-        clickCoordinates(x, y, 0, 0);
-    }
-
-    /**
-     * Проверка смотрелась ли эта реклама раньше, анализируются пиксели в центре экрана.
-     *
-     * @return
-     */
     private boolean checkAdPreviouslyClicked() {
         print("Check ad previously clicked");
         BufferedImage screen = getScreen();
@@ -309,8 +174,6 @@ arrayList.clone();
                 return true;
             }
             else {
-                //if(isSaving)
-                    //saveAd(rgbPixels);
                 return false;
             }
         }
@@ -321,38 +184,6 @@ arrayList.clone();
         }
     }
 
-    private void installApp(AdObservable observable) {
-        Rectangle installButton = findGreenButton();
-        if(installButton == null) {
-            printErr("CAN'T FIND INSTALL BUTTON PROBABLY NOT INSIDE GOOGLE PLAY");
-            return;
-        }
-        click(installButton);
-        sleep(3);
-        print("Wait until app downloaded");
-        boolean isDownLoaded = false;
-        while(!isDownLoaded && downloadsAttemptsCount < 240) {
-            downloadsAttemptsCount++;
-            sleep(5);
-            isDownLoaded = findGreenButton() != null;
-        }
-        if(downloadsAttemptsCount >= 240)
-            return;
-
-        click(DELETE_APP_VERTICAL);
-        sleep(1);
-        click(DELETE_CONFIRMATION_VERTICAL);
-        sleep(2);
-
-        Main.downloadedAppsCount++;
-        System.out.println("Already downloaded: " + Main.downloadedAppsCount);
-    }
-
-    /**
-     * Поиск зелёной кнопки в Google Play и клик по ней
-     *
-     * @return boolean - isFound
-     */
     private Rectangle findGreenButton() {
         BufferedImage screen = getScreen();
         for(int y = mDevice.y; y < mDevice.y + mDevice.height; y++) {
@@ -380,8 +211,8 @@ arrayList.clone();
                     if(width > 25 && height > 25 && greenPixelsCount > width * height * 0.7) {
                         x -= mDevice.x;
                         y -= mDevice.y;
-                        print("Install button found");
-                        return new Rectangle(x, y, width, height, "Install button");
+                        print("Download button found");
+                        return new Rectangle(x, y, width, height, "Download button");
                     }
                 }
             }
@@ -389,37 +220,125 @@ arrayList.clone();
         return null;
     }
 
-    private boolean checkInsideLauncher() {
+    private void saveAd() throws IOException {
         BufferedImage screen = getScreen();
-        int[] pixel1 = ColorParser.parse(screen.getRGB(mDevice.x + LAUNCHER_POINT_1.x, mDevice.y + LAUNCHER_POINT_1.y));
-        int[] pixel2 = ColorParser.parse(screen.getRGB(mDevice.x + LAUNCHER_POINT_2.x, mDevice.y + LAUNCHER_POINT_2.y));
-        if(pixel1[0] == 255 && pixel1[1] == 255 && pixel1[2] == 255 &&
-                pixel2[0] == 255 && pixel2[1] == 69 && pixel2[2] == 58) {
-            print("Inside launcher");
-            return true;
-        }
-        else {
-            print("Not inside launcher");
-            return false;
-        }
+        int centerX = mDevice.x + mDevice.width / 2;
+        int centerY = mDevice.y + mDevice.height / 2;
+        int[] rgbPixels = getAdCharacteristics(centerX, centerY);
+        print("Saving ad");
+        BufferedWriter writer = new BufferedWriter(new FileWriter(deviceFilePath, true));
+        writer.newLine();
+        writer.append(rgbPixels[0] + ";" + rgbPixels[1] + ";" + rgbPixels[2]);
+        writer.close();
     }
 
-    private boolean checkInsideErudit() {
+    private void findAndClickInstallButton() {
+        print("Searching install button");
+
+        //ADCOLONY_VERTICAL
+        int endY = mDevice.y + ADCOLONY_INSTALL_BUTTON_VERTICAL.y + ADCOLONY_INSTALL_BUTTON_VERTICAL.height;
+        int endX = mDevice.x + ADCOLONY_INSTALL_BUTTON_VERTICAL.x + ADCOLONY_INSTALL_BUTTON_VERTICAL.width;
+        int adColonyGreenCount = getPixelsCountInArea(this::checkPixelGreenAdcolony,
+                mDevice.x + ADCOLONY_INSTALL_BUTTON_VERTICAL.x, mDevice.y + ADCOLONY_INSTALL_BUTTON_VERTICAL.y, endX, endY);
+        if(adColonyGreenCount > ADCOLONY_INSTALL_BUTTON_VERTICAL.width * ADCOLONY_INSTALL_BUTTON_VERTICAL.height * 0.7) {
+            print("AdColony install button vertical found");
+            click(ADCOLONY_INSTALL_BUTTON_VERTICAL);
+            return;
+        }
+
+        //ADCOLONY_HORIZONTAL
+        endY = mDevice.y + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.y + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.height;
+        endX = mDevice.x + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.x + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.width;
+        adColonyGreenCount = getPixelsCountInArea(this::checkPixelGreenAdcolony,
+                mDevice.x + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.x, mDevice.y + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.y, endX, endY);
+        if(adColonyGreenCount > ADCOLONY_INSTALL_BUTTON_HORIZONTAL.width * ADCOLONY_INSTALL_BUTTON_HORIZONTAL.height * 0.7) {
+            print("AdColony install button horizontal found");
+            click(ADCOLONY_INSTALL_BUTTON_HORIZONTAL);
+            return;
+        }
+        Rectangle greenButton = findButton(this::checkPixelGreen);
+        if(greenButton != null) {
+            click(greenButton, "Green Install Button, x:" + greenButton.x + "    y:" + greenButton.y);
+        }
+
+        Rectangle redButton = findButton(this::checkPixelRed);
+        if(redButton != null) {
+            click(redButton, "Red Install Button, x:" + redButton.x + "    y:" + redButton.y);
+        }
+
+        Rectangle blueButton = findButton(this::checkPixelBlue);
+        if(blueButton != null) {
+            click(blueButton, "Blue Install Button, x:" + blueButton.x + "    y:" + blueButton.y);
+        }
+
+        //Если не была найдена кнопка установки - клик по центру экрана
+        print("No button found");
+        int x = mDevice.x + mDevice.width / 2;
+        int y = mDevice.y + mDevice.height / 2;
+        clickCoordinates(x, y, 0, 0);
+    }
+
+    private Rectangle findButton(Predicate<int[]> checkFunction) {
         BufferedImage screen = getScreen();
-        int[] pixel1 = ColorParser.parse(screen.getRGB(mDevice.x +
-                ERUDIT_POINT_1.x, mDevice.y + ERUDIT_POINT_1.y));
-        int[] pixel2 = ColorParser.parse(screen.getRGB(mDevice.x + ERUDIT_POINT_2.x, mDevice.y + ERUDIT_POINT_2.y));
-        int[] pixel3 = ColorParser.parse(screen.getRGB(mDevice.x + ERUDIT_POINT_3.x, mDevice.y + ERUDIT_POINT_3.y));
-        if(pixel1[0] == 103 && pixel1[1] == 58 && pixel1[2] == 183 &&
-                pixel2[0] == 244 && pixel2[1] == 67 && pixel2[2] == 54 &&
-                pixel3[0] == 255 && pixel3[1] == 255 && pixel3[2] == 225) {
-            print("Inside Erudit");
-            return true;
+        for(int y = mDevice.y + 2; y < mDevice.y + mDevice.height - 2; ++y) {
+            for(int x = mDevice.x + 2; x < mDevice.x + mDevice.width - 2; ++x) {
+                int[] pixel = ColorParser.parse(screen.getRGB(x, y));
+                if(checkFunction.test(pixel)) {
+                    int width = 0, height = 0;
+                    for(int currentY = y; currentY < mDevice.y + mDevice.height - 2; ++currentY) {
+                        int[] currentPixel = ColorParser.parse(screen.getRGB(x, currentY));
+                        if(!checkFunction.test(currentPixel))
+                            break;
+                        height++;
+                    }
+
+                    for(int currentX = x; currentX < mDevice.x + mDevice.width - 2; ++currentX) {
+                        int[] currentPixel = ColorParser.parse(screen.getRGB(currentX, y));
+                        if(!checkFunction.test(currentPixel))
+                            break;
+                        width++;
+                    }
+
+                    if(width + height > 105) {
+                        int pixelCountInArea = getPixelsCountInArea(checkFunction,
+                                x, y, mDevice.x + x + width, mDevice.y + y + height);
+                        if(pixelCountInArea > width * height * 0.7) {
+                            x -= mDevice.x;
+                            y -= mDevice.y;
+                            return new Rectangle(x, y, width, height);
+                        }
+                    }
+                }
+            }
         }
-        else {
-            print("Not inside Erudit");
-            return false;
+        return null;
+    }
+
+    private void installApp(AdObservable observable) {
+        Rectangle installButton = findGreenButton();
+        if(installButton == null) {
+            printErr("CAN'T FIND INSTALL BUTTON PROBABLY NOT INSIDE GOOGLE PLAY");
+            return;
         }
+        click(installButton);
+        sleep(3);
+        print("Wait until app downloaded");
+        boolean isDownLoaded = false;
+        while(!isDownLoaded && downloadsAttemptsCount < 240) {
+            downloadsAttemptsCount++;
+            sleep(5);
+            isDownLoaded = findGreenButton() != null;
+        }
+        if(downloadsAttemptsCount >= 240)
+            return;
+
+        click(DELETE_APP_VERTICAL);
+        sleep(1);
+        click(DELETE_CONFIRMATION_VERTICAL);
+        sleep(2);
+
+        Main.downloadedAppsCount++;
+        System.out.println("Already downloaded: " + Main.downloadedAppsCount);
     }
 
     private void openErudit() {
@@ -453,19 +372,37 @@ arrayList.clone();
             }
     }
 
-    /**
-     * Сохранение в файл характеристики рекламы
-     */
-    private void saveAd() throws IOException {
+    private boolean checkInsideLauncher() {
         BufferedImage screen = getScreen();
-        int centerX = mDevice.x + mDevice.width / 2;
-        int centerY = mDevice.y + mDevice.height / 2;
-        int[] rgbPixels = getAdCharacteristics(centerX, centerY);
-        print("Saving ad");
-        BufferedWriter writer = new BufferedWriter(new FileWriter(deviceFilePath, true));
-        writer.newLine();
-        writer.append(rgbPixels[0] + ";" + rgbPixels[1] + ";" + rgbPixels[2]);
-        writer.close();
+        int[] pixel1 = ColorParser.parse(screen.getRGB(mDevice.x + LAUNCHER_POINT_1.x, mDevice.y + LAUNCHER_POINT_1.y));
+        int[] pixel2 = ColorParser.parse(screen.getRGB(mDevice.x + LAUNCHER_POINT_2.x, mDevice.y + LAUNCHER_POINT_2.y));
+        if(pixel1[0] == 255 && pixel1[1] == 255 && pixel1[2] == 255 &&
+                pixel2[0] == 255 && pixel2[1] == 69 && pixel2[2] == 58) {
+            print("Inside launcher");
+            return true;
+        }
+        else {
+            print("Not inside launcher");
+            return false;
+        }
+    }
+
+    private boolean checkInsideErudit() {
+        BufferedImage screen = getScreen();
+        int[] pixel1 = ColorParser.parse(screen.getRGB(mDevice.x +
+                ERUDIT_POINT_1.x, mDevice.y + ERUDIT_POINT_1.y));
+        int[] pixel2 = ColorParser.parse(screen.getRGB(mDevice.x + ERUDIT_POINT_2.x, mDevice.y + ERUDIT_POINT_2.y));
+        int[] pixel3 = ColorParser.parse(screen.getRGB(mDevice.x + ERUDIT_POINT_3.x, mDevice.y + ERUDIT_POINT_3.y));
+        if(pixel1[0] == 103 && pixel1[1] == 58 && pixel1[2] == 183 &&
+                pixel2[0] == 244 && pixel2[1] == 67 && pixel2[2] == 54 &&
+                pixel3[0] == 255 && pixel3[1] == 255 && pixel3[2] == 225) {
+            print("Inside Erudit");
+            return true;
+        }
+        else {
+            print("Not inside Erudit");
+            return false;
+        }
     }
 
     private int[] getAdCharacteristics(int centerX, int centerY) {
@@ -520,6 +457,14 @@ arrayList.clone();
         }
     }
 
+    private boolean checkPixelGreen(int[] rgb) {
+        return rgb[1] - rgb[0] >= 50 && rgb[1] >= 135 && rgb[1] - rgb[2] >= 40;
+    }
+
+    private boolean checkPixelRed(int[] rgb) {
+        return rgb[0] - rgb[1] >= 50 && rgb[0] >= 150 && rgb[0] - rgb[2] >= 50;
+    }
+
     private boolean checkPixelBlue(int[] rgb) {
         return rgb[2] - rgb[0] >= 50 && rgb[2] >= 150 && rgb[2] - rgb[1] >= 50;
     }
@@ -530,14 +475,6 @@ arrayList.clone();
 
     private boolean checkPixelGreenGooglePlay(int[] rgb) {
         return rgb[0] == 1 && rgb[1] == 135 && rgb[2] == 95;
-    }
-
-    private boolean checkPixelGreen(int[] rgb) {
-        return rgb[1] - rgb[0] >= 50 && rgb[1] >= 135 && rgb[1] - rgb[2] >= 40;
-    }
-
-    private boolean checkPixelRed(int[] rgb) {
-        return rgb[0] - rgb[1] >= 50 && rgb[0] >= 150 && rgb[0] - rgb[2] >= 50;
     }
 
     private int getPixelsCountInArea(Predicate<int[]> checkFunction, int x, int y, int endX, int endY) {
@@ -568,7 +505,7 @@ arrayList.clone();
 
     private void sleep(int defaultSeconds) {
         try {
-            deviceThread.sleep((long) defaultSeconds * 1000);
+            Thread.sleep((long) defaultSeconds * 1000);
         }
         catch(InterruptedException e) {
             e.printStackTrace();
