@@ -3,7 +3,7 @@ package com.handen;
 import com.sun.jna.platform.win32.WinDef;
 
 class Device {
-    public int id, x, y, width, height;
+    public int id, x, width, height;
     public WinDef.HWND hwnd;
 
     public Device(int id, String windowTitle) {
@@ -25,7 +25,6 @@ class Device {
         }
 
         x = rect[0];
-        y = rect[1];
         width = rect[2] - rect[0];
         height = rect[3] - rect[1];
     }

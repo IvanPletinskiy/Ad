@@ -143,9 +143,9 @@ arrayList.clone();
         BufferedImage screen1 = getScreen();
         sleep(1);
         BufferedImage screen2 = getScreen();
-        int yEnd = mDevice.y + mDevice.height - 100;
+        int yEnd = mDevice.height - 100;
         int xEnd = mDevice.x + mDevice.width - 100;
-        for(int y = mDevice.y + 100; y < yEnd; ++y) {
+        for(int y = 100; y < yEnd; ++y) {
             for(int x = mDevice.x + 100; x < xEnd; ++x) {
                 int binColor1 = screen1.getRGB(x, y);
                 int binColor2 = screen2.getRGB(x, y);
@@ -167,7 +167,7 @@ arrayList.clone();
         print("Check ad previously clicked");
         BufferedImage screen = getScreen();
         int centerX = mDevice.x + mDevice.width / 2;
-        int centerY = mDevice.y + mDevice.height / 2;
+        int centerY = mDevice.height / 2;
         ArrayList<int[]> pixelsList = getAdCharacteristics(centerX, centerY);
         BufferedReader reader;
         try {
@@ -230,12 +230,12 @@ arrayList.clone();
 
     private Rectangle findGreenButton() {
         BufferedImage screen = getScreen();
-        for(int y = mDevice.y; y < mDevice.y + mDevice.height; y++) {
+        for(int y = 0; y < mDevice.height; y++) {
             for(int x = mDevice.x; x < mDevice.x + mDevice.width; x++) {
                 int[] pixel = ColorParser.parse(screen.getRGB(x, y));
                 if(checkPixelGreenGooglePlay(pixel)) {
                     int width = 0, height = 0;
-                    for(int currentY = y; currentY < mDevice.y + mDevice.height; ++currentY) {
+                    for(int currentY = y; currentY < mDevice.height; ++currentY) {
                         int[] currentPixel = ColorParser.parse(screen.getRGB(x, currentY));
                         if(!checkPixelGreenGooglePlay(currentPixel))
                             break;
@@ -250,11 +250,10 @@ arrayList.clone();
                     }
 
                     int greenPixelsCount = getPixelsCountInArea(this::checkPixelGreenGooglePlay,
-                            x, y, mDevice.x + x + width, mDevice.y + y + height);
+                            x, y, mDevice.x + x + width, y + height);
 
                     if(width > 25 && height > 25 && greenPixelsCount > width * height * 0.7) {
                         x -= mDevice.x;
-                        y -= mDevice.y;
                         print("Download button found");
                         return new Rectangle(x, y, width, height, "Download button");
                     }
@@ -267,7 +266,7 @@ arrayList.clone();
     private void saveAd() throws IOException {
         BufferedImage screen = getScreen();
         int centerX = mDevice.x + mDevice.width / 2;
-        int centerY = mDevice.y + mDevice.height / 2;
+        int centerY = mDevice.height / 2;
         ArrayList<int[]> pixelsList = getAdCharacteristics(centerX, centerY);
         print("Saving ad");
         BufferedWriter writer = new BufferedWriter(new FileWriter(deviceFilePath, true));
@@ -284,10 +283,10 @@ arrayList.clone();
         print("Searching install button");
 
         //ADCOLONY_VERTICAL
-        int endY = mDevice.y + ADCOLONY_INSTALL_BUTTON_VERTICAL.y + ADCOLONY_INSTALL_BUTTON_VERTICAL.height;
+        int endY = ADCOLONY_INSTALL_BUTTON_VERTICAL.y + ADCOLONY_INSTALL_BUTTON_VERTICAL.height;
         int endX = mDevice.x + ADCOLONY_INSTALL_BUTTON_VERTICAL.x + ADCOLONY_INSTALL_BUTTON_VERTICAL.width;
         int adColonyGreenCount = getPixelsCountInArea(this::checkPixelGreenAdcolony,
-                mDevice.x + ADCOLONY_INSTALL_BUTTON_VERTICAL.x, mDevice.y + ADCOLONY_INSTALL_BUTTON_VERTICAL.y, endX, endY);
+                mDevice.x + ADCOLONY_INSTALL_BUTTON_VERTICAL.x, ADCOLONY_INSTALL_BUTTON_VERTICAL.y, endX, endY);
         if(adColonyGreenCount > ADCOLONY_INSTALL_BUTTON_VERTICAL.width * ADCOLONY_INSTALL_BUTTON_VERTICAL.height * 0.7) {
             print("AdColony install button vertical found");
             click(ADCOLONY_INSTALL_BUTTON_VERTICAL);
@@ -295,10 +294,10 @@ arrayList.clone();
         }
 
         //ADCOLONY_HORIZONTAL
-        endY = mDevice.y + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.y + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.height;
+        endY = ADCOLONY_INSTALL_BUTTON_HORIZONTAL.y + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.height;
         endX = mDevice.x + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.x + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.width;
         adColonyGreenCount = getPixelsCountInArea(this::checkPixelGreenAdcolony,
-                mDevice.x + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.x, mDevice.y + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.y, endX, endY);
+                mDevice.x + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.x, ADCOLONY_INSTALL_BUTTON_HORIZONTAL.y, endX, endY);
         if(adColonyGreenCount > ADCOLONY_INSTALL_BUTTON_HORIZONTAL.width * ADCOLONY_INSTALL_BUTTON_HORIZONTAL.height * 0.7) {
             print("AdColony install button horizontal found");
             click(ADCOLONY_INSTALL_BUTTON_HORIZONTAL);
@@ -322,18 +321,18 @@ arrayList.clone();
         //Если не была найдена кнопка установки - клик по центру экрана
         print("No button found");
         int x = mDevice.x + mDevice.width / 2;
-        int y = mDevice.y + mDevice.height / 2;
+        int y = mDevice.height / 2;
         clickCoordinates(x, y, 0, 0);
     }
 
     private Rectangle findButton(Predicate<int[]> checkFunction) {
         BufferedImage screen = getScreen();
-        for(int y = mDevice.y + 2; y < mDevice.y + mDevice.height - 2; ++y) {
+        for(int y = 2; y < mDevice.height - 2; ++y) {
             for(int x = mDevice.x + 2; x < mDevice.x + mDevice.width - 2; ++x) {
                 int[] pixel = ColorParser.parse(screen.getRGB(x, y));
                 if(checkFunction.test(pixel)) {
                     int width = 0, height = 0;
-                    for(int currentY = y; currentY < mDevice.y + mDevice.height - 2; ++currentY) {
+                    for(int currentY = y; currentY < mDevice.height - 2; ++currentY) {
                         int[] currentPixel = ColorParser.parse(screen.getRGB(x, currentY));
                         if(!checkFunction.test(currentPixel))
                             break;
@@ -349,10 +348,9 @@ arrayList.clone();
 
                     if(width + height > 105) {
                         int pixelCountInArea = getPixelsCountInArea(checkFunction,
-                                x, y, mDevice.x + x + width, mDevice.y + y + height);
+                                x, y, mDevice.x + x + width, y + height);
                         if(pixelCountInArea > width * height * 0.7) {
                             x -= mDevice.x;
-                            y -= mDevice.y;
                             return new Rectangle(x, y, width, height);
                         }
                     }
@@ -422,8 +420,8 @@ arrayList.clone();
 
     private boolean checkInsideLauncher() {
         BufferedImage screen = getScreen();
-        int[] pixel1 = ColorParser.parse(screen.getRGB(mDevice.x + LAUNCHER_POINT_1.x, mDevice.y + LAUNCHER_POINT_1.y));
-        int[] pixel2 = ColorParser.parse(screen.getRGB(mDevice.x + LAUNCHER_POINT_2.x, mDevice.y + LAUNCHER_POINT_2.y));
+        int[] pixel1 = ColorParser.parse(screen.getRGB(mDevice.x + LAUNCHER_POINT_1.x, LAUNCHER_POINT_1.y));
+        int[] pixel2 = ColorParser.parse(screen.getRGB(mDevice.x + LAUNCHER_POINT_2.x, LAUNCHER_POINT_2.y));
         if(pixel1[0] == 255 && pixel1[1] == 255 && pixel1[2] == 255 &&
                 pixel2[0] == 255 && pixel2[1] == 69 && pixel2[2] == 58) {
             print("Inside launcher");
@@ -438,9 +436,9 @@ arrayList.clone();
     private boolean checkInsideErudit() {
         BufferedImage screen = getScreen();
         int[] pixel1 = ColorParser.parse(screen.getRGB(mDevice.x +
-                ERUDIT_POINT_1.x, mDevice.y + ERUDIT_POINT_1.y));
-        int[] pixel2 = ColorParser.parse(screen.getRGB(mDevice.x + ERUDIT_POINT_2.x, mDevice.y + ERUDIT_POINT_2.y));
-        int[] pixel3 = ColorParser.parse(screen.getRGB(mDevice.x + ERUDIT_POINT_3.x, mDevice.y + ERUDIT_POINT_3.y));
+                ERUDIT_POINT_1.x, ERUDIT_POINT_1.y));
+        int[] pixel2 = ColorParser.parse(screen.getRGB(mDevice.x + ERUDIT_POINT_2.x, ERUDIT_POINT_2.y));
+        int[] pixel3 = ColorParser.parse(screen.getRGB(mDevice.x + ERUDIT_POINT_3.x, ERUDIT_POINT_3.y));
         if(pixel1[0] == 103 && pixel1[1] == 58 && pixel1[2] == 183 &&
                 pixel2[0] == 244 && pixel2[1] == 67 && pixel2[2] == 54 &&
                 pixel3[0] == 255 && pixel3[1] == 255 && pixel3[2] == 225) {
@@ -472,7 +470,7 @@ arrayList.clone();
     synchronized private void click(Rectangle rectangle, String message) {
         int x = rectangle.x + mRandom.nextInt(rectangle.width);
         int y = rectangle.y + mRandom.nextInt(rectangle.height);
-        mRobot.mouseMove(mDevice.x + x, mDevice.y + y);
+        mRobot.mouseMove(mDevice.x + x, y);
         mRobot.mousePress(MouseEvent.BUTTON1_DOWN_MASK);
         mRobot.mouseRelease(MouseEvent.BUTTON1_DOWN_MASK);
         print("Click " + message);
@@ -491,7 +489,7 @@ arrayList.clone();
             y += mRandom.nextInt(height);
         }
 
-        mRobot.mouseMove(mDevice.x + x, mDevice.y + y);
+        mRobot.mouseMove(mDevice.x + x, y);
         mRobot.mousePress(MouseEvent.BUTTON1_DOWN_MASK);
         mRobot.mouseRelease(MouseEvent.BUTTON1_DOWN_MASK);
         print("Click coordinates " + x + "\t" + y);
