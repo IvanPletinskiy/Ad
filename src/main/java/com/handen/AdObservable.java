@@ -14,6 +14,7 @@ class AdObservable<T> extends Observable {
 
     @Override
     protected void subscribeActual(Observer observer) {
+
     }
 /*
     public Boolean isGooglePlayVertical() {

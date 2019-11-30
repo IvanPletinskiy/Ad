@@ -11,6 +11,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -48,7 +49,6 @@ arrayList.add(x);
 arrayList.add(y);
 arrayList.clone();
  */
-
     /*
     User32.INSTANCE.SetWindowPos(User32.INSTANCE.FindWindow(null, windowName),
         null,0,0, 1384, 920, null);
@@ -82,14 +82,40 @@ arrayList.clone();
                 .delay(35, TimeUnit.SECONDS)
                 .filter((o) -> !checkAdPreviouslyClicked())
                 .doOnNext(observable -> {
-                    if(findGreenButton() == null) {
+                    if(findGreenButton() == null) { //Если не в Google Play
                         saveAd();
                         findAndClickInstallButton();
                     }
                 })
                 .delay(4, TimeUnit.SECONDS)
                 .doOnNext((o) -> saveAd())
-                .doOnNext(this::installApp)
+                //.doOnNext(this::installApp)
+                .doOnNext((o) -> {
+                    Rectangle installButton = findGreenButton();
+                    if(installButton == null) {
+                        printErr("CAN'T FIND INSTALL BUTTON PROBABLY NOT INSIDE GOOGLE PLAY");
+                        return;
+                    }
+                    click(installButton);
+                    sleep(3);
+                    print("Wait until app downloaded");
+                    boolean isDownLoaded = false;
+                    while(!isDownLoaded && downloadsAttemptsCount < 240) {
+                        downloadsAttemptsCount++;
+                        sleep(5);
+                        isDownLoaded = findGreenButton() != null;
+                    }
+                    if(downloadsAttemptsCount >= 240)
+                        return;
+
+                    click(DELETE_APP_VERTICAL);
+                    sleep(1);
+                    click(DELETE_CONFIRMATION_VERTICAL);
+                    sleep(2);
+
+                    Main.downloadedAppsCount++;
+                    System.out.println("Already downloaded: " + Main.downloadedAppsCount);
+                })
                 .doOnComplete(() -> {
                     watchAdAttemptsCount = 0;
                     downloadsAttemptsCount = 0;
@@ -142,19 +168,35 @@ arrayList.clone();
         BufferedImage screen = getScreen();
         int centerX = mDevice.x + mDevice.width / 2;
         int centerY = mDevice.y + mDevice.height / 2;
-        int[] rgbPixels = getAdCharacteristics(centerX, centerY);
+        ArrayList<int[]> pixelsList = getAdCharacteristics(centerX, centerY);
         BufferedReader reader;
         try {
             FileReader fileReader = new FileReader(deviceFilePath);
             reader = new BufferedReader(fileReader);
             String line = reader.readLine();
             boolean found = false;
+            int mismatches;
             while(line != null) {
                 if(line.equals("")) {
                     line = reader.readLine();
                     continue;
                 }
-
+                mismatches = 0;
+                String[] pixelsString = line.split(";");
+                for(int i = 0; i < pixelsString.length; ++i) {
+                    String pixelString = pixelsString[i];
+                    for(int j = 0; j < 3; ++j) {
+                        String[] rgbArray = pixelString.split(",");
+                        if(Integer.parseInt(rgbArray[j]) != pixelsList.get(i)[j]) {
+                            mismatches++;
+                        }
+                    }
+                }
+                if(mismatches > 2000) {
+                    found = true;
+                    break;
+                }
+/*
                 String[] linePixelsString = line.split(";");
                 int[] linePixels = new int[3];
                 for(int i = 0; i < 3; ++i)
@@ -166,6 +208,8 @@ arrayList.clone();
                     found = true;
                     break;
                 }
+
+ */
                 line = reader.readLine();
             }
             fileReader.close();
@@ -224,11 +268,15 @@ arrayList.clone();
         BufferedImage screen = getScreen();
         int centerX = mDevice.x + mDevice.width / 2;
         int centerY = mDevice.y + mDevice.height / 2;
-        int[] rgbPixels = getAdCharacteristics(centerX, centerY);
+        ArrayList<int[]> pixelsList = getAdCharacteristics(centerX, centerY);
         print("Saving ad");
         BufferedWriter writer = new BufferedWriter(new FileWriter(deviceFilePath, true));
         writer.newLine();
-        writer.append(rgbPixels[0] + ";" + rgbPixels[1] + ";" + rgbPixels[2]);
+        StringBuilder builder = new StringBuilder();
+        for(int[] pixel : pixelsList) {
+            builder.append(pixel[0]).append(",").append(pixel[1]).append(",").append(pixel[2]).append(';');
+        }
+        writer.append(builder.toString());
         writer.close();
     }
 
@@ -405,18 +453,16 @@ arrayList.clone();
         }
     }
 
-    private int[] getAdCharacteristics(int centerX, int centerY) {
+    private ArrayList<int[]> getAdCharacteristics(int centerX, int centerY) {
         BufferedImage screen = getScreen();
-        int[] rgbPixels = new int[3];
+        //  int[] rgbPixels = new int[3];
+        ArrayList<int[]> pixelsList = new ArrayList<>();
         for(int y = centerY - 50; y < centerY + 50; ++y)
             for(int x = centerX - 50; x < centerX + 50; ++x) {
                 int[] pixel = ColorParser.parse(screen.getRGB(x, y));
-                for(int i = 0; i < 3; ++i) {
-                    if(pixel[i] > 240)
-                        rgbPixels[i]++;
-                }
+                pixelsList.add(pixel);
             }
-        return rgbPixels;
+        return pixelsList;
     }
 
     synchronized private void click(Rectangle rectangle) {
