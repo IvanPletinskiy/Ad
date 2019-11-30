@@ -6,43 +6,22 @@ public class Main {
     public static int devicesCount = 0;
 
     public static void main(String[] args) throws Exception {
-  //  devicesCount++;
-        Device device0 = new Device(0, "BlueStacks");
-        Device device1 = new Device(1, "BlueStacks1");
-        Device device2 = new Device(2, "BlueStacks2");
-        if(device0.hwnd != null) {
-            new Thread(() -> {
-                try {
-                    DeviceThread deviceThread = new DeviceThread(device0);
-                }
-                catch(Exception e) {
-                    e.printStackTrace();
-                }
-            }).start();
-            //Thread.sleep(1000);
+        start(1, 1, 0, 0);
+    }
+    private static void start(int dev1, int dev2, int dev3, int secondsDelay) throws Exception {
+        if(dev1 == 1) {
+            Device device1 = new Device(0, "BlueStacks");
+            new DeviceThread(device1).start();
         }
-
-        if(device1.hwnd != null) {
-            new Thread(() -> {
-                try {
-                    DeviceThread deviceThread1 = new DeviceThread(device1);
-                }
-                catch(Exception e) {
-                    e.printStackTrace();
-                }
-            }).start();
-           // Thread.sleep(1000);
+        Thread.sleep(secondsDelay * 1000);
+        if(dev2 == 2) {
+            Device device2 = new Device(1, "BlueStacks1");
+            new DeviceThread(device2).start();
         }
-
-        if(device2.hwnd != null) {
-            new Thread(() -> {
-                try {
-                    DeviceThread deviceThread2 = new DeviceThread(device2);
-                }
-                catch(Exception e) {
-                    e.printStackTrace();
-                }
-            }).start();
+        Thread.sleep(secondsDelay * 1000);
+        if(dev3 == 3) {
+            Device device3 = new Device(2, "BlueStacks2");
+            new DeviceThread(device3).start();
         }
     }
 }

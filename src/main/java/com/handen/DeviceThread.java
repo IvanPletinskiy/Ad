@@ -72,7 +72,9 @@ arrayList.clone();
         format = new SimpleDateFormat("HH:mm:ss");
         watchAdAttemptsCount = 0;
         downloadsAttemptsCount = 0;
+    }
 
+    public void start() throws Exception {
         Observable.just(new AdObservable())
                 .observeOn(Schedulers.newThread())
                 .subscribeOn(Schedulers.newThread())
