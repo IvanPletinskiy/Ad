@@ -1,9 +1,5 @@
 package com.handen;
 
-import java.awt.Dimension;
-import java.awt.Robot;
-import java.awt.Toolkit;
-import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -12,13 +8,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 
+import static com.handen.ColorUtils.checkPixelGreenGooglePlay;
+import static com.handen.DeviceThread.Logger.*;
 import static com.handen.Rectangles.ADCOLONY_INSTALL_BUTTON_HORIZONTAL;
 import static com.handen.Rectangles.ADCOLONY_INSTALL_BUTTON_VERTICAL;
 import static com.handen.Rectangles.AD_BUTTON;
@@ -29,11 +26,6 @@ import static com.handen.Rectangles.CLOSE_DOWNLOADED_APP;
 import static com.handen.Rectangles.DELETE_APP_VERTICAL;
 import static com.handen.Rectangles.DELETE_CONFIRMATION_VERTICAL;
 import static com.handen.Rectangles.DEVICE_BACK_BUTTON;
-import static com.handen.Rectangles.ERUDIT_POINT_1;
-import static com.handen.Rectangles.ERUDIT_POINT_2;
-import static com.handen.Rectangles.ERUDIT_POINT_3;
-import static com.handen.Rectangles.LAUNCHER_POINT_1;
-import static com.handen.Rectangles.LAUNCHER_POINT_2;
 import static com.handen.Rectangles.OPEN_ERUDIT;
 
 class DeviceThread {
@@ -52,25 +44,21 @@ arrayList.clone();
     User32.INSTANCE.SetWindowPos(User32.INSTANCE.FindWindow(null, windowName),
         null,0,0, 1384, 920, null);
      */
-    private Robot mRobot;
     private Device mDevice;
-    private Random mRandom;
     private String deviceFilePath;
-    private SimpleDateFormat format;
     /**
      * Если больше 10 попыток посмотреть рекламу -> рестарт
      */
     private int watchAdAttemptsCount;
     private int downloadsAttemptsCount;
+    private Logger mLogger;
 
     public DeviceThread(Device device) throws Exception {
         mDevice = device;
-        mRobot = new Robot();
-        mRandom = new Random();
         deviceFilePath = "C:/Ad/" + mDevice.id + ".txt";
-        format = new SimpleDateFormat("HH:mm:ss");
         watchAdAttemptsCount = 0;
         downloadsAttemptsCount = 0;
+        mLogger = new Logger();
     }
 
     public void start() {
@@ -94,12 +82,12 @@ arrayList.clone();
                 .doOnNext((o) -> {
                     Rectangle installButton = findGreenButton();
                     if(installButton == null) {
-                        printErr("CAN'T FIND INSTALL BUTTON PROBABLY NOT INSIDE GOOGLE PLAY");
+                        mLogger.printErr("CAN'T FIND INSTALL BUTTON PROBABLY NOT INSIDE GOOGLE PLAY");
                         return;
                     }
-                    click(installButton);
+                    mDevice.click(installButton);
                     sleep(3);
-                    print("Wait until app downloaded");
+                    mLogger.print("Wait until app downloaded");
                     boolean isDownLoaded = false;
                     while(!isDownLoaded && downloadsAttemptsCount < 240) {
                         downloadsAttemptsCount++;
@@ -109,9 +97,9 @@ arrayList.clone();
                     if(downloadsAttemptsCount >= 240)
                         return;
 
-                    click(DELETE_APP_VERTICAL);
+                    mDevice.click(DELETE_APP_VERTICAL);
                     sleep(1);
-                    click(DELETE_CONFIRMATION_VERTICAL);
+                    mDevice.click(DELETE_CONFIRMATION_VERTICAL);
                     sleep(2);
 
                     Main.downloadedAppsCount++;
@@ -128,18 +116,23 @@ arrayList.clone();
 
     private void clickAdButton(AdObservable observable) {
         boolean isAdShowing = false;
-        while(!isAdShowing && watchAdAttemptsCount < 5 && checkInsideErudit()) {
-            click(AD_BUTTON);
+        boolean isInsideErudit = mDevice.checkInsideErudit();
+        if(isInsideErudit)
+            mLogger.print("INSIDE ERUDIT");
+        else
+            mLogger.print("NOT INSIDE ERUDIT");
+        while(!isAdShowing && watchAdAttemptsCount < 5 && isInsideErudit) {
+            mDevice.click(AD_BUTTON);
             watchAdAttemptsCount++;
             sleep(3);
             isAdShowing = checkAdShown(observable);
         }
         if(isAdShowing)
-            print("Ad is showing");
+            mLogger.print("Ad is showing");
     }
 
     private boolean checkAdShown(AdObservable observable) {
-        print("Check Ad Shown");
+        mLogger.print("Check Ad Shown");
         int mismatches = 0;
         BufferedImage screen1 = getScreen();
         sleep(1);
@@ -160,12 +153,12 @@ arrayList.clone();
                     return true;
             }
         }
-        print("Ad is not shown");
+        mLogger.print("Ad is not shown");
         return false;
     }
 
     private boolean checkAdPreviouslyClicked() {
-        print("Check ad previously clicked");
+        mLogger.print("Check ad previously clicked");
         int centerX = mDevice.x + mDevice.width / 2;
         int centerY = mDevice.height / 2;
         Characteristics characteristics = getAdCharacteristics(centerX, centerY);
@@ -188,12 +181,12 @@ arrayList.clone();
             }
             fileReader.close();
             if(isFound) {
-                print("Ad is clicked previously");
+                mLogger.print("Ad is clicked previously");
             }
             return isFound;
         }
         catch(IOException e) {
-            printErr(deviceFilePath + "\t NOT FOUND");
+            mLogger.printErr(deviceFilePath + "\t NOT FOUND");
             e.printStackTrace();
             return false;
         }
@@ -220,12 +213,12 @@ arrayList.clone();
                         width++;
                     }
 
-                    int greenPixelsCount = getPixelsCountInArea(this::checkPixelGreenGooglePlay,
+                    int greenPixelsCount = getPixelsCountInArea(ColorUtils::checkPixelGreenGooglePlay,
                             x, y, mDevice.x + x + width, y + height);
 
                     if(width > 25 && height > 25 && greenPixelsCount > width * height * 0.7) {
                         x -= mDevice.x;
-                        print("Download button found");
+                        mLogger.print("Download button found");
                         return new Rectangle(x, y, width, height, "Download button");
                     }
                 }
@@ -238,7 +231,7 @@ arrayList.clone();
         int centerX = mDevice.x + mDevice.width / 2;
         int centerY = mDevice.height / 2;
         Characteristics characteristics = getAdCharacteristics(centerX, centerY);
-        print("Saving ad");
+        mLogger.print("Saving ad");
         BufferedWriter writer = new BufferedWriter(new FileWriter(deviceFilePath, true));
         writer.newLine();
         writer.append(characteristics.toString());
@@ -246,49 +239,49 @@ arrayList.clone();
     }
 
     private void findAndClickInstallButton() {
-        print("Searching install button");
+        mLogger.print("Searching install button");
 
         //ADCOLONY_VERTICAL
         int endY = ADCOLONY_INSTALL_BUTTON_VERTICAL.y + ADCOLONY_INSTALL_BUTTON_VERTICAL.height;
         int endX = mDevice.x + ADCOLONY_INSTALL_BUTTON_VERTICAL.x + ADCOLONY_INSTALL_BUTTON_VERTICAL.width;
-        int adColonyGreenCount = getPixelsCountInArea(this::checkPixelGreenAdcolony,
+        int adColonyGreenCount = getPixelsCountInArea(ColorUtils::checkPixelGreenAdcolony,
                 mDevice.x + ADCOLONY_INSTALL_BUTTON_VERTICAL.x, ADCOLONY_INSTALL_BUTTON_VERTICAL.y, endX, endY);
         if(adColonyGreenCount > ADCOLONY_INSTALL_BUTTON_VERTICAL.width * ADCOLONY_INSTALL_BUTTON_VERTICAL.height * 0.7) {
-            print("AdColony install button vertical found");
-            click(ADCOLONY_INSTALL_BUTTON_VERTICAL);
+            mLogger.print("AdColony install button vertical found");
+            mDevice.click(ADCOLONY_INSTALL_BUTTON_VERTICAL);
             return;
         }
 
         //ADCOLONY_HORIZONTAL
         endY = ADCOLONY_INSTALL_BUTTON_HORIZONTAL.y + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.height;
         endX = mDevice.x + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.x + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.width;
-        adColonyGreenCount = getPixelsCountInArea(this::checkPixelGreenAdcolony,
+        adColonyGreenCount = getPixelsCountInArea(ColorUtils::checkPixelGreenAdcolony,
                 mDevice.x + ADCOLONY_INSTALL_BUTTON_HORIZONTAL.x, ADCOLONY_INSTALL_BUTTON_HORIZONTAL.y, endX, endY);
         if(adColonyGreenCount > ADCOLONY_INSTALL_BUTTON_HORIZONTAL.width * ADCOLONY_INSTALL_BUTTON_HORIZONTAL.height * 0.7) {
-            print("AdColony install button horizontal found");
-            click(ADCOLONY_INSTALL_BUTTON_HORIZONTAL);
+            mLogger.print("AdColony install button horizontal found");
+            mDevice.click(ADCOLONY_INSTALL_BUTTON_HORIZONTAL);
             return;
         }
-        Rectangle greenButton = findButton(this::checkPixelGreen);
+        Rectangle greenButton = findButton(ColorUtils::checkPixelGreen);
         if(greenButton != null) {
-            click(greenButton, "Green Install Button, x:" + greenButton.x + "    y:" + greenButton.y);
+            mDevice.click(greenButton, "Green Install Button, x:" + greenButton.x + "    y:" + greenButton.y);
         }
 
-        Rectangle redButton = findButton(this::checkPixelRed);
+        Rectangle redButton = findButton(ColorUtils::checkPixelRed);
         if(redButton != null) {
-            click(redButton, "Red Install Button, x:" + redButton.x + "    y:" + redButton.y);
+            mDevice.click(redButton, "Red Install Button, x:" + redButton.x + "    y:" + redButton.y);
         }
 
-        Rectangle blueButton = findButton(this::checkPixelBlue);
+        Rectangle blueButton = findButton(ColorUtils::checkPixelBlue);
         if(blueButton != null) {
-            click(blueButton, "Blue Install Button, x:" + blueButton.x + "    y:" + blueButton.y);
+            mDevice.click(blueButton, "Blue Install Button, x:" + blueButton.x + "    y:" + blueButton.y);
         }
 
         //Если не была найдена кнопка установки - клик по центру экрана
-        print("No button found");
+        mLogger.print("No button found");
         int x = mDevice.x + mDevice.width / 2;
         int y = mDevice.height / 2;
-        clickCoordinates(x, y, 0, 0);
+        mDevice.clickCoordinates(x, y, 0, 0);
     }
 
     private Rectangle findButton(Predicate<int[]> checkFunction) {
@@ -329,12 +322,12 @@ arrayList.clone();
     private void installApp(AdObservable observable) {
         Rectangle installButton = findGreenButton();
         if(installButton == null) {
-            printErr("CAN'T FIND INSTALL BUTTON PROBABLY NOT INSIDE GOOGLE PLAY");
+            mLogger.printErr(("CAN'T FIND INSTALL BUTTON PROBABLY NOT INSIDE GOOGLE PLAY");
             return;
         }
-        click(installButton);
+        mDevice.click(installButton);
         sleep(3);
-        print("Wait until app downloaded");
+        mLogger.print("Wait until app downloaded");
         boolean isDownLoaded = false;
         while(!isDownLoaded && downloadsAttemptsCount < 240) {
             downloadsAttemptsCount++;
@@ -344,9 +337,9 @@ arrayList.clone();
         if(downloadsAttemptsCount >= 240)
             return;
 
-        click(DELETE_APP_VERTICAL);
+        mDevice.click(DELETE_APP_VERTICAL);
         sleep(1);
-        click(DELETE_CONFIRMATION_VERTICAL);
+        mDevice.click(DELETE_CONFIRMATION_VERTICAL);
         sleep(2);
 
         Main.downloadedAppsCount++;
@@ -354,72 +347,49 @@ arrayList.clone();
     }
 
     private void openErudit() {
-        click(CLOSE_DOWNLOADED_APP);
+        mDevice.click(CLOSE_DOWNLOADED_APP);
         sleep(2);
-        click(CLOSE_DOWNLOADED_APP);
+        mDevice.click(CLOSE_DOWNLOADED_APP);
         sleep(2);
-        if(checkInsideLauncher()) {
-            print("Inside launcher");
-            click(OPEN_ERUDIT);
+
+        if(mDevice.checkInsideLauncher()) {
+            mLogger.print("Inside launcher");
+            mDevice.click(OPEN_ERUDIT);
             sleep(3);
         }
-        if(checkInsideErudit()) {
-            print("Inside Erudit");
+        else
+            mLogger.print("NOT Inside launcher");
+
+        if(mDevice.checkInsideErudit()) {
+            mLogger.print("Inside Erudit");
             return;
         }
-        click(DEVICE_BACK_BUTTON);
-        sleep(3);
-        if(checkInsideLauncher()) {
-            print("Inside launcher");
-            click(OPEN_ERUDIT);
-        }
         else
-            if(!checkInsideErudit()) {
-                click(CLOSE_AD_VERTICAL);
-                click(CLOSE_AD_VERTICAL_1);
-                click(CLOSE_AD_HORIZONTAL);
+            mLogger.print("NOT Inside launcher");
+
+        mDevice.click(DEVICE_BACK_BUTTON);
+        sleep(3);
+        if(mDevice.checkInsideLauncher()) {
+            mLogger.print("Inside launcher");
+            mDevice.click(OPEN_ERUDIT);
+        }
+        else {
+            mLogger.print("NOT Inside launcher");
+            if(!mDevice.checkInsideErudit()) {
+                mLogger.print("NOT Inside Erudit");
+                mDevice.click(CLOSE_AD_VERTICAL);
+                mDevice.click(CLOSE_AD_VERTICAL_1);
+                mDevice.click(CLOSE_AD_HORIZONTAL);
                 sleep(3);
-                if(!checkInsideErudit())
-                    printErr("ERROR");
+                if(!mDevice.checkInsideErudit())
+                    mLogger.printErr("ERROR CANNOT OPEN ERUDIT");
             }
-    }
-
-    private boolean checkInsideLauncher() {
-        BufferedImage screen = getScreen();
-        int[] pixel1 = ColorUtils.parse(screen.getRGB(mDevice.x + LAUNCHER_POINT_1.x, LAUNCHER_POINT_1.y));
-        int[] pixel2 = ColorUtils.parse(screen.getRGB(mDevice.x + LAUNCHER_POINT_2.x, LAUNCHER_POINT_2.y));
-        if(pixel1[0] == 255 && pixel1[1] == 255 && pixel1[2] == 255 &&
-                pixel2[0] == 255 && pixel2[1] == 69 && pixel2[2] == 58) {
-            print("Inside launcher");
-            return true;
         }
-        else {
-            print("Not inside launcher");
-            return false;
-        }
-    }
-
-    private boolean checkInsideErudit() {
-        BufferedImage screen = getScreen();
-        int[] pixel1 = ColorUtils.parse(screen.getRGB(mDevice.x +
-                ERUDIT_POINT_1.x, ERUDIT_POINT_1.y));
-        int[] pixel2 = ColorUtils.parse(screen.getRGB(mDevice.x + ERUDIT_POINT_2.x, ERUDIT_POINT_2.y));
-        int[] pixel3 = ColorUtils.parse(screen.getRGB(mDevice.x + ERUDIT_POINT_3.x, ERUDIT_POINT_3.y));
-        if(pixel1[0] == 103 && pixel1[1] == 58 && pixel1[2] == 183 &&
-                pixel2[0] == 244 && pixel2[1] == 67 && pixel2[2] == 54 &&
-                pixel3[0] == 255 && pixel3[1] == 255 && pixel3[2] == 225) {
-            print("Inside Erudit");
-            return true;
-        }
-        else {
-            print("Not inside Erudit");
-            return false;
-        }
+        mLogger.print("Inside Erudit");
     }
 
     private Characteristics getAdCharacteristics(int centerX, int centerY) {
         BufferedImage screen = getScreen();
-        //  int[] rgbPixels = new int[3];
 
         Characteristics characteristics = new Characteristics();
 
@@ -440,64 +410,6 @@ arrayList.clone();
         return characteristics;
     }
 
-    synchronized private void click(Rectangle rectangle) {
-        click(rectangle, rectangle.name);
-    }
-
-    synchronized private void click(Rectangle rectangle, String message) {
-        int x = rectangle.x + mRandom.nextInt(rectangle.width);
-        int y = rectangle.y + mRandom.nextInt(rectangle.height);
-        mRobot.mouseMove(mDevice.x + x, y);
-        mRobot.mousePress(MouseEvent.BUTTON1_DOWN_MASK);
-        mRobot.mouseRelease(MouseEvent.BUTTON1_DOWN_MASK);
-        print("Click " + message);
-        try {
-            Thread.sleep(500);
-        }
-        catch(InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    synchronized private void clickCoordinates(int startX, int startY, int width, int height) {
-        int x = startX, y = startY;
-        if(width > 0 && height > 0) {
-            x += mRandom.nextInt(width);
-            y += mRandom.nextInt(height);
-        }
-
-        mRobot.mouseMove(mDevice.x + x, y);
-        mRobot.mousePress(MouseEvent.BUTTON1_DOWN_MASK);
-        mRobot.mouseRelease(MouseEvent.BUTTON1_DOWN_MASK);
-        print("Click coordinates " + x + "\t" + y);
-        try {
-            Thread.sleep(500);
-        }
-        catch(InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private boolean checkPixelGreen(int[] rgb) {
-        return rgb[1] - rgb[0] >= 50 && rgb[1] >= 135 && rgb[1] - rgb[2] >= 40;
-    }
-
-    private boolean checkPixelRed(int[] rgb) {
-        return rgb[0] - rgb[1] >= 50 && rgb[0] >= 150 && rgb[0] - rgb[2] >= 50;
-    }
-
-    private boolean checkPixelBlue(int[] rgb) {
-        return rgb[2] - rgb[0] >= 50 && rgb[2] >= 150 && rgb[2] - rgb[1] >= 50;
-    }
-
-    private boolean checkPixelGreenAdcolony(int[] rgb) {
-        return rgb[0] == 117 && rgb[1] == 197 && rgb[2] == 62;
-    }
-
-    private boolean checkPixelGreenGooglePlay(int[] rgb) {
-        return rgb[0] == 1 && rgb[1] == 135 && rgb[2] == 95;
-    }
-
     private int getPixelsCountInArea(Predicate<int[]> checkFunction, int x, int y, int endX, int endY) {
         BufferedImage screen = getScreen();
         int count = 0;
@@ -511,25 +423,25 @@ arrayList.clone();
         return count;
     }
 
-    private BufferedImage getScreen() {
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        return mRobot.createScreenCapture(new java.awt.Rectangle(screenSize));
-    }
-
-    private void print(String s) {
-        System.out.println(format.format(new Date()) + "\t" + "Device:" + mDevice.id + "\t" + s);
-    }
-
-    private void printErr(String s) {
-        System.err.println(format.format(new Date()) + "\t" + "Device:" + mDevice.id + "\t" + s);
-    }
-
     private void sleep(int defaultSeconds) {
         try {
             Thread.sleep((long) defaultSeconds * 1000);
         }
         catch(InterruptedException e) {
             e.printStackTrace();
+        }
+    }
+
+    class Logger {
+        private static final String ANSI_RESET = "\u001B[0m";
+        private static final String ANSI_RED = "\u001B[31m";
+        private SimpleDateFormat format  = new SimpleDateFormat("HH:mm:ss");
+        private void print(String s) {
+            System.out.println(format.format(new Date()) + "\t" + Thread.currentThread().toString() + "\t" + "Device:" + mDevice.id + "\t" + s);
+        }
+
+        private void printErr(String s) {
+            System.err.println(ANSI_RED + format.format(new Date()) + "\t" + Thread.currentThread().toString() + "\t" + "Device:" + mDevice.id + "\t" + s + ANSI_RESET);
         }
     }
 }
