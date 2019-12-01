@@ -28,6 +28,5 @@ class Rectangles {
     public static Rectangle DELETE_APP_VERTICAL = new Rectangle(130, 225, 1, 1, "DELETE_APP_VERTICAL");
     public static Rectangle DELETE_CONFIRMATION_VERTICAL = new Rectangle(397, 508, 1, 1, "DELETE_CONFIRMATION_VERTICAL");
     //public static Rectangle DELETE_APP_HORIZONTAL = new Rectangle(197, 712, 1, 1, "DELETE_APP_HORIZONTAL");
-    //public static Rectangle DELETE_CONFIRMATION_HORIZONTAL = new Rectangle(283, 291, 1, 1, "DELETE_CONFIRMATION_HORIZONTAL");
-
+    //public static Rectangle DELETE_CONFIRMATION_HORIZONTAL = new Rectangle(283, 291, 1, 1, "DELETE_CONFIRMATION_HORIZONTAL");х
 }

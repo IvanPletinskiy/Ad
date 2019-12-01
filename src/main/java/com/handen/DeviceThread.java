@@ -11,7 +11,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -43,7 +42,7 @@ int x = MouseInfo.getPointerInfo().location.x;
 int y = MouseInfo.getPointerInfo().location.y;
 BufferedImage screen = getScreen();
 ArrayList<Integer> arrayList = new ArrayList();
-for(int i : ColorParser.parse(screen.getRGB(x, y)))
+for(int i : ColorUtils.parse(screen.getRGB(x, y)))
     arrayList.add(i);
 arrayList.add(x);
 arrayList.add(y);
@@ -74,7 +73,7 @@ arrayList.clone();
         downloadsAttemptsCount = 0;
     }
 
-    public void start() throws Exception {
+    public void start() {
         Observable.just(new AdObservable())
                 .observeOn(Schedulers.newThread())
                 .subscribeOn(Schedulers.newThread())
@@ -151,8 +150,8 @@ arrayList.clone();
             for(int x = mDevice.x + 100; x < xEnd; ++x) {
                 int binColor1 = screen1.getRGB(x, y);
                 int binColor2 = screen2.getRGB(x, y);
-                int[] rgb1 = ColorParser.parse(binColor1);
-                int[] rgb2 = ColorParser.parse(binColor2);
+                int[] rgb1 = ColorUtils.parse(binColor1);
+                int[] rgb2 = ColorUtils.parse(binColor2);
                 for(int i = 0; i < 3; ++i) {
                     if(rgb1[i] != rgb2[i])
                         mismatches++;
@@ -167,61 +166,31 @@ arrayList.clone();
 
     private boolean checkAdPreviouslyClicked() {
         print("Check ad previously clicked");
-        BufferedImage screen = getScreen();
         int centerX = mDevice.x + mDevice.width / 2;
         int centerY = mDevice.height / 2;
-        ArrayList<int[]> pixelsList = getAdCharacteristics(centerX, centerY);
+        Characteristics characteristics = getAdCharacteristics(centerX, centerY);
         BufferedReader reader;
         try {
             FileReader fileReader = new FileReader(deviceFilePath);
             reader = new BufferedReader(fileReader);
             String line = reader.readLine();
-            boolean found = false;
-            int mismatches;
+            boolean isFound = false;
             while(line != null) {
                 if(line.equals("")) {
                     line = reader.readLine();
                     continue;
                 }
-                mismatches = 0;
-                String[] pixelsString = line.split(";");
-                for(int i = 0; i < pixelsString.length; ++i) {
-                    String pixelString = pixelsString[i];
-                    for(int j = 0; j < 3; ++j) {
-                        String[] rgbArray = pixelString.split(",");
-                        if(Integer.parseInt(rgbArray[j]) != pixelsList.get(i)[j]) {
-                            mismatches++;
-                        }
-                    }
-                }
-                if(mismatches > 2000) {
-                    found = true;
+                if(characteristics.approximatlyEquals(Characteristics.fromString(line))) {
+                    isFound = true;
                     break;
                 }
-/*
-                String[] linePixelsString = line.split(";");
-                int[] linePixels = new int[3];
-                for(int i = 0; i < 3; ++i)
-                    linePixels[i] = Integer.parseInt(linePixelsString[i]);
-
-                if(Math.abs(rgbPixels[0] - linePixels[0]) <= 50 &&
-                        Math.abs(rgbPixels[1] - linePixels[1]) <= 50 &&
-                        Math.abs(rgbPixels[2] - linePixels[2]) <= 50) {
-                    found = true;
-                    break;
-                }
-
- */
                 line = reader.readLine();
             }
             fileReader.close();
-            if(found) {
+            if(isFound) {
                 print("Ad is clicked previously");
-                return true;
             }
-            else {
-                return false;
-            }
+            return isFound;
         }
         catch(IOException e) {
             printErr(deviceFilePath + "\t NOT FOUND");
@@ -234,18 +203,18 @@ arrayList.clone();
         BufferedImage screen = getScreen();
         for(int y = 0; y < mDevice.height; y++) {
             for(int x = mDevice.x; x < mDevice.x + mDevice.width; x++) {
-                int[] pixel = ColorParser.parse(screen.getRGB(x, y));
+                int[] pixel = ColorUtils.parse(screen.getRGB(x, y));
                 if(checkPixelGreenGooglePlay(pixel)) {
                     int width = 0, height = 0;
                     for(int currentY = y; currentY < mDevice.height; ++currentY) {
-                        int[] currentPixel = ColorParser.parse(screen.getRGB(x, currentY));
+                        int[] currentPixel = ColorUtils.parse(screen.getRGB(x, currentY));
                         if(!checkPixelGreenGooglePlay(currentPixel))
                             break;
                         height++;
                     }
 
                     for(int currentX = x; currentX < mDevice.x + mDevice.width; ++currentX) {
-                        int[] currentPixel = ColorParser.parse(screen.getRGB(currentX, y));
+                        int[] currentPixel = ColorUtils.parse(screen.getRGB(currentX, y));
                         if(!checkPixelGreenGooglePlay(currentPixel))
                             break;
                         width++;
@@ -266,18 +235,13 @@ arrayList.clone();
     }
 
     private void saveAd() throws IOException {
-        BufferedImage screen = getScreen();
         int centerX = mDevice.x + mDevice.width / 2;
         int centerY = mDevice.height / 2;
-        ArrayList<int[]> pixelsList = getAdCharacteristics(centerX, centerY);
+        Characteristics characteristics = getAdCharacteristics(centerX, centerY);
         print("Saving ad");
         BufferedWriter writer = new BufferedWriter(new FileWriter(deviceFilePath, true));
         writer.newLine();
-        StringBuilder builder = new StringBuilder();
-        for(int[] pixel : pixelsList) {
-            builder.append(pixel[0]).append(",").append(pixel[1]).append(",").append(pixel[2]).append(';');
-        }
-        writer.append(builder.toString());
+        writer.append(characteristics.toString());
         writer.close();
     }
 
@@ -331,18 +295,18 @@ arrayList.clone();
         BufferedImage screen = getScreen();
         for(int y = 2; y < mDevice.height - 2; ++y) {
             for(int x = mDevice.x + 2; x < mDevice.x + mDevice.width - 2; ++x) {
-                int[] pixel = ColorParser.parse(screen.getRGB(x, y));
+                int[] pixel = ColorUtils.parse(screen.getRGB(x, y));
                 if(checkFunction.test(pixel)) {
                     int width = 0, height = 0;
                     for(int currentY = y; currentY < mDevice.height - 2; ++currentY) {
-                        int[] currentPixel = ColorParser.parse(screen.getRGB(x, currentY));
+                        int[] currentPixel = ColorUtils.parse(screen.getRGB(x, currentY));
                         if(!checkFunction.test(currentPixel))
                             break;
                         height++;
                     }
 
                     for(int currentX = x; currentX < mDevice.x + mDevice.width - 2; ++currentX) {
-                        int[] currentPixel = ColorParser.parse(screen.getRGB(currentX, y));
+                        int[] currentPixel = ColorUtils.parse(screen.getRGB(currentX, y));
                         if(!checkFunction.test(currentPixel))
                             break;
                         width++;
@@ -422,8 +386,8 @@ arrayList.clone();
 
     private boolean checkInsideLauncher() {
         BufferedImage screen = getScreen();
-        int[] pixel1 = ColorParser.parse(screen.getRGB(mDevice.x + LAUNCHER_POINT_1.x, LAUNCHER_POINT_1.y));
-        int[] pixel2 = ColorParser.parse(screen.getRGB(mDevice.x + LAUNCHER_POINT_2.x, LAUNCHER_POINT_2.y));
+        int[] pixel1 = ColorUtils.parse(screen.getRGB(mDevice.x + LAUNCHER_POINT_1.x, LAUNCHER_POINT_1.y));
+        int[] pixel2 = ColorUtils.parse(screen.getRGB(mDevice.x + LAUNCHER_POINT_2.x, LAUNCHER_POINT_2.y));
         if(pixel1[0] == 255 && pixel1[1] == 255 && pixel1[2] == 255 &&
                 pixel2[0] == 255 && pixel2[1] == 69 && pixel2[2] == 58) {
             print("Inside launcher");
@@ -437,10 +401,10 @@ arrayList.clone();
 
     private boolean checkInsideErudit() {
         BufferedImage screen = getScreen();
-        int[] pixel1 = ColorParser.parse(screen.getRGB(mDevice.x +
+        int[] pixel1 = ColorUtils.parse(screen.getRGB(mDevice.x +
                 ERUDIT_POINT_1.x, ERUDIT_POINT_1.y));
-        int[] pixel2 = ColorParser.parse(screen.getRGB(mDevice.x + ERUDIT_POINT_2.x, ERUDIT_POINT_2.y));
-        int[] pixel3 = ColorParser.parse(screen.getRGB(mDevice.x + ERUDIT_POINT_3.x, ERUDIT_POINT_3.y));
+        int[] pixel2 = ColorUtils.parse(screen.getRGB(mDevice.x + ERUDIT_POINT_2.x, ERUDIT_POINT_2.y));
+        int[] pixel3 = ColorUtils.parse(screen.getRGB(mDevice.x + ERUDIT_POINT_3.x, ERUDIT_POINT_3.y));
         if(pixel1[0] == 103 && pixel1[1] == 58 && pixel1[2] == 183 &&
                 pixel2[0] == 244 && pixel2[1] == 67 && pixel2[2] == 54 &&
                 pixel3[0] == 255 && pixel3[1] == 255 && pixel3[2] == 225) {
@@ -453,16 +417,27 @@ arrayList.clone();
         }
     }
 
-    private ArrayList<int[]> getAdCharacteristics(int centerX, int centerY) {
+    private Characteristics getAdCharacteristics(int centerX, int centerY) {
         BufferedImage screen = getScreen();
         //  int[] rgbPixels = new int[3];
-        ArrayList<int[]> pixelsList = new ArrayList<>();
+
+        Characteristics characteristics = new Characteristics();
+
+        //ArrayList<int[]> pixelsList = new ArrayList<>();
         for(int y = centerY - 50; y < centerY + 50; ++y)
             for(int x = centerX - 50; x < centerX + 50; ++x) {
-                int[] pixel = ColorParser.parse(screen.getRGB(x, y));
-                pixelsList.add(pixel);
+                int[] pixel = ColorUtils.parse(screen.getRGB(x, y));
+                if(pixel[0] > 200 && pixel[0] != 255) {
+                    characteristics.addR();
+                }
+                if(pixel[1] > 200 && pixel[1] != 255) {
+                    characteristics.addG();
+                }
+                if(pixel[2] > 200 && pixel[2] != 255) {
+                    characteristics.addB();
+                }
             }
-        return pixelsList;
+        return characteristics;
     }
 
     synchronized private void click(Rectangle rectangle) {
@@ -528,7 +503,7 @@ arrayList.clone();
         int count = 0;
         for(; y < endY; y++) {
             for(; x < endX; x++) {
-                int[] currentPixel = ColorParser.parse(screen.getRGB(x, y));
+                int[] currentPixel = ColorUtils.parse(screen.getRGB(x, y));
                 if(checkFunction.test(currentPixel))
                     count++;
             }

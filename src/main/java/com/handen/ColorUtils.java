@@ -1,6 +1,6 @@
 package com.handen;
 
-class ColorParser {
+class ColorUtils {
 
     static int[] parse(int binColor) {
         int[] ret = new int[3];
