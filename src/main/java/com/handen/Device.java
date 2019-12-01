@@ -36,7 +36,7 @@ class Device {
         moveAndResizeWindow(windowTitle);
         int[] rect = {0,0,0,0};
         try {
-            rect = getRect(windowTitle);
+            rect = getRect();
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -62,7 +62,7 @@ class Device {
         Main.devicesCount++;
     }
 
-    private int[] getRect(String windowName) throws Exception {
+    private int[] getRect() throws Exception {
         int[] rect = {0, 0, 0, 0};
         int result = User32.INSTANCE.GetWindowRect(hwnd, rect);
         if(result == 0) {
@@ -92,17 +92,19 @@ class Device {
 
     public BufferedImage getScreen() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        return mRobot.createScreenCapture(new java.awt.Rectangle(screenSize));
+        BufferedImage image = mRobot.createScreenCapture(new java.awt.Rectangle(screenSize));
+        BufferedImage subImage = image.getSubimage(x + 2, 2, width - 2, height - 2);
+        return subImage;
     }
 
-    synchronized public void click(Rectangle rectangle) {
+    synchronized void click(Rectangle rectangle) {
         click(rectangle, rectangle.name);
     }
 
-    synchronized public void click(Rectangle rectangle, String message) {
+    synchronized void click(Rectangle rectangle, String message) {
         int x = rectangle.x + mRandom.nextInt(rectangle.width);
         int y = rectangle.y + mRandom.nextInt(rectangle.height);
-        mRobot.mouseMove(mDevice.x + x, y);
+        mRobot.mouseMove(this.x + x, y);
         mRobot.mousePress(MouseEvent.BUTTON1_DOWN_MASK);
         mRobot.mouseRelease(MouseEvent.BUTTON1_DOWN_MASK);
         print("Click " + message);
@@ -114,14 +116,14 @@ class Device {
         }
     }
 
-    synchronized public void clickCoordinates(int startX, int startY, int width, int height) {
+    synchronized void clickCoordinates(int startX, int startY, int width, int height) {
         int x = startX, y = startY;
         if(width > 0 && height > 0) {
             x += mRandom.nextInt(width);
             y += mRandom.nextInt(height);
         }
 
-        mRobot.mouseMove(mDevice.x + x, y);
+        mRobot.mouseMove(this.x + x, y);
         mRobot.mousePress(MouseEvent.BUTTON1_DOWN_MASK);
         mRobot.mouseRelease(MouseEvent.BUTTON1_DOWN_MASK);
         print("Click coordinates " + x + "\t" + y);
