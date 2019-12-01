@@ -52,7 +52,7 @@ arrayList.clone();
     private int downloadsAttemptsCount;
     private Logger mLogger;
 
-    public DeviceThread(Device device) {
+    DeviceThread(Device device) {
         mDevice = device;
         deviceFilePath = "C:/Ad/" + mDevice.id + ".txt";
         watchAdAttemptsCount = 0;
@@ -60,7 +60,7 @@ arrayList.clone();
         mLogger = new Logger();
     }
 
-    public void start() {
+    void start() {
         Observable.just(new AdObservable())
                 .observeOn(Schedulers.newThread())
                 .subscribeOn(Schedulers.newThread())
@@ -279,7 +279,8 @@ arrayList.clone();
         mLogger.print("No button found");
         int x = mDevice.width / 2;
         int y = mDevice.height / 2;
-        mDevice.clickCoordinates(x, y, 0, 0);
+        mDevice.click(x, y);
+        mLogger.print("Clicking coordinates: x = " + x + "\t" + "y = " + y);
     }
 
     private Rectangle findButton(Predicate<int[]> checkFunction) {
@@ -314,33 +315,6 @@ arrayList.clone();
             }
         }
         return null;
-    }
-
-    private void installApp(AdObservable observable) {
-        Rectangle installButton = findGreenButton();
-        if(installButton == null) {
-            mLogger.printErr("CAN'T FIND INSTALL BUTTON PROBABLY NOT INSIDE GOOGLE PLAY");
-            return;
-        }
-        mDevice.click(installButton);
-        sleep(3);
-        mLogger.print("Wait until app downloaded");
-        boolean isDownLoaded = false;
-        while(!isDownLoaded && downloadsAttemptsCount < 240) {
-            downloadsAttemptsCount++;
-            sleep(5);
-            isDownLoaded = findGreenButton() != null;
-        }
-        if(downloadsAttemptsCount >= 240)
-            return;
-
-        mDevice.click(DELETE_APP_VERTICAL);
-        sleep(1);
-        mDevice.click(DELETE_CONFIRMATION_VERTICAL);
-        sleep(2);
-
-        Main.downloadedAppsCount++;
-        System.out.println("Already downloaded: " + Main.downloadedAppsCount);
     }
 
     private void openErudit() {
@@ -429,10 +403,11 @@ arrayList.clone();
         }
     }
 
-    class Logger {
+    private class Logger {
         private static final String ANSI_RESET = "\u001B[0m";
         private static final String ANSI_RED = "\u001B[31m";
-        private SimpleDateFormat format  = new SimpleDateFormat("HH:mm:ss");
+        private SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
+
         private void print(String s) {
             System.out.println(format.format(new Date()) + "\t" + Thread.currentThread().toString() + "\t" + "Device:" + mDevice.id + "\t" + s);
         }

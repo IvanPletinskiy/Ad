@@ -2,8 +2,8 @@ package com.handen;
 
 public class Main {
 
-    public static int downloadedAppsCount = 0;
-    public static int devicesCount = 0;
+    static int downloadedAppsCount = 0;
+    static int devicesCount = 0;
 
     public static void main(String[] args) throws Exception {
         start(1, 1, 0, 0);

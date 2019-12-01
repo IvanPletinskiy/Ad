@@ -19,12 +19,12 @@ import static com.handen.Rectangles.LAUNCHER_POINT_1;
 import static com.handen.Rectangles.LAUNCHER_POINT_2;
 
 class Device {
-    public int id, x, width, height;
-    public WinDef.HWND hwnd;
+    int id, x, width, height;
+    private WinDef.HWND hwnd;
     private Robot mRobot;
     private Random mRandom;
 
-    public Device(int id, String windowTitle) {
+    Device(int id, String windowTitle) {
         this.id = id;
         hwnd = User32.INSTANCE.FindWindow(null, windowTitle);
 
@@ -34,7 +34,7 @@ class Device {
                 return;
         }
         moveAndResizeWindow(windowTitle);
-        int[] rect = {0,0,0,0};
+        int[] rect = {0, 0, 0, 0};
         try {
             rect = getRect();
         }
@@ -56,9 +56,9 @@ class Device {
 
     private void moveAndResizeWindow(String windowTitle) {
         User32.INSTANCE.SetWindowPos(User32.INSTANCE.FindWindow(null, windowTitle),
-                null,Main.devicesCount * 502,0, 1480, 960, null);
+                null, Main.devicesCount * 502, 0, 1480, 960, null);
         User32.INSTANCE.SetWindowPos(User32.INSTANCE.FindWindow(null, "BlueStacks " + windowTitle),
-                null,Main.devicesCount * 502,0, 1480, 960, null);
+                null, Main.devicesCount * 502, 0, 1480, 960, null);
         Main.devicesCount++;
     }
 
@@ -90,7 +90,7 @@ class Device {
                 pixel3[0] == 255 && pixel3[1] == 255 && pixel3[2] == 225;
     }
 
-    public BufferedImage getScreen() {
+    BufferedImage getScreen() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         BufferedImage image = mRobot.createScreenCapture(new java.awt.Rectangle(screenSize));
         BufferedImage subImage = image.getSubimage(x + 2, 2, width - 2, height - 2);
@@ -104,31 +104,16 @@ class Device {
     synchronized void click(Rectangle rectangle, String message) {
         int x = rectangle.x + mRandom.nextInt(rectangle.width);
         int y = rectangle.y + mRandom.nextInt(rectangle.height);
-        mRobot.mouseMove(this.x + x, y);
-        mRobot.mousePress(MouseEvent.BUTTON1_DOWN_MASK);
-        mRobot.mouseRelease(MouseEvent.BUTTON1_DOWN_MASK);
         print("Click " + message);
-        try {
-            Thread.sleep(500);
-        }
-        catch(InterruptedException e) {
-            e.printStackTrace();
-        }
+        click(this.x + x, y);
     }
 
-    synchronized void clickCoordinates(int startX, int startY, int width, int height) {
-        int x = startX, y = startY;
-        if(width > 0 && height > 0) {
-            x += mRandom.nextInt(width);
-            y += mRandom.nextInt(height);
-        }
-
+    synchronized void click(int x, int y) {
         mRobot.mouseMove(this.x + x, y);
         mRobot.mousePress(MouseEvent.BUTTON1_DOWN_MASK);
         mRobot.mouseRelease(MouseEvent.BUTTON1_DOWN_MASK);
-        print("Click coordinates " + x + "\t" + y);
         try {
-            Thread.sleep(500);
+            Thread.sleep(100);
         }
         catch(InterruptedException e) {
             e.printStackTrace();

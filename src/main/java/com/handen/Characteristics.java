@@ -1,24 +1,27 @@
 package com.handen;
-public class Characteristics {
-    int red, green, blue;
 
-    public Characteristics(int reg, int green, int blue) {
+public class Characteristics {
+    private int red, green, blue;
+
+    private Characteristics(int reg, int green, int blue) {
         this.red = reg;
         this.green = green;
         this.blue = blue;
     }
 
-    public Characteristics() {
+    Characteristics() {
 
     }
 
-    public void addR() {
+    void addR() {
         red++;
     }
-    public void addG() {
+
+    void addG() {
         green++;
     }
-    public void addB() {
+
+    void addB() {
         blue++;
     }
 
@@ -27,12 +30,12 @@ public class Characteristics {
         return red + "," + green + "," + blue;
     }
 
-    public static Characteristics fromString(String s) {
+    static Characteristics fromString(String s) {
         String[] rgb = s.split(",");
         return new Characteristics(Integer.parseInt(rgb[0]), Integer.parseInt(rgb[1]), Integer.parseInt(rgb[2]));
     }
 
-    public boolean approximatlyEquals(Characteristics characteristics) {
+    boolean approximatlyEquals(Characteristics characteristics) {
         return Math.abs(characteristics.red - red) > 25 && Math.abs(characteristics.green - green) > 25 && Math.abs(characteristics.blue - blue) > 25;
     }
 }
