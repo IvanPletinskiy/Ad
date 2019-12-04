@@ -64,7 +64,6 @@ arrayList.clone();
     }
 
     void start() {
-        mLogger.saveErrorScreenshot(mDevice.getScreen());
         Observable.just(new AdObservable())
                 .observeOn(Schedulers.newThread())
                 .subscribeOn(Schedulers.newThread())
