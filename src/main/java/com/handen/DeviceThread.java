@@ -3,6 +3,7 @@ package com.handen;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -10,6 +11,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+
+import javax.imageio.ImageIO;
 
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
@@ -54,13 +57,14 @@ arrayList.clone();
 
     DeviceThread(Device device) {
         mDevice = device;
-        deviceFilePath = "C:/Ad/" + mDevice.id + ".txt";
+        deviceFilePath = Logger.PATH + mDevice.id + ".txt";
         watchAdAttemptsCount = 0;
         downloadsAttemptsCount = 0;
         mLogger = new Logger();
     }
 
     void start() {
+        mLogger.saveErrorScreenshot(mDevice.getScreen());
         Observable.just(new AdObservable())
                 .observeOn(Schedulers.newThread())
                 .subscribeOn(Schedulers.newThread())
@@ -77,11 +81,13 @@ arrayList.clone();
                 })
                 .delay(4, TimeUnit.SECONDS)
                 .doOnNext((o) -> saveAd())
-                //.doOnNext(this::installApp)
                 .doOnNext((o) -> {
+                    //Inside Google Play
+                    //installApp method
                     Rectangle installButton = findGreenButton();
                     if(installButton == null) {
                         mLogger.printErr("CAN'T FIND INSTALL BUTTON PROBABLY NOT INSIDE GOOGLE PLAY");
+                        mLogger.saveErrorScreenshot(mDevice.getScreen());
                         return;
                     }
                     mDevice.click(installButton);
@@ -102,7 +108,7 @@ arrayList.clone();
                     sleep(2);
 
                     Main.downloadedAppsCount++;
-                    System.out.println("Already downloaded: " + Main.downloadedAppsCount);
+                    mLogger.justPrint("Already downloaded: " + Main.downloadedAppsCount);
                 })
                 .doOnComplete(() -> {
                     watchAdAttemptsCount = 0;
@@ -114,6 +120,7 @@ arrayList.clone();
     }
 
     private void clickAdButton(AdObservable observable) {
+        //TODO зачем нужен isInsideErudit?
         boolean isAdShowing = false;
         boolean isInsideErudit = mDevice.checkInsideErudit();
         if(isInsideErudit)
@@ -281,6 +288,7 @@ arrayList.clone();
         int y = mDevice.height / 2;
         mDevice.click(x, y);
         mLogger.print("Clicking coordinates: x = " + x + "\t" + "y = " + y);
+        mLogger.saveErrorScreenshot(mDevice.getScreen());
     }
 
     private Rectangle findButton(Predicate<int[]> checkFunction) {
@@ -352,8 +360,10 @@ arrayList.clone();
                 mDevice.click(CLOSE_AD_VERTICAL_1);
                 mDevice.click(CLOSE_AD_HORIZONTAL);
                 sleep(3);
-                if(!mDevice.checkInsideErudit())
+                if(!mDevice.checkInsideErudit()) {
                     mLogger.printErr("ERROR CANNOT OPEN ERUDIT");
+                    mLogger.saveErrorScreenshot(mDevice.getScreen());
+                }
             }
         }
         mLogger.print("Inside Erudit");
@@ -404,6 +414,7 @@ arrayList.clone();
     }
 
     private class Logger {
+        private static final String PATH = "C:/Ad/";
         private static final String ANSI_RESET = "\u001B[0m";
         private static final String ANSI_RED = "\u001B[31m";
         private SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
@@ -414,6 +425,36 @@ arrayList.clone();
 
         private void printErr(String s) {
             System.err.println(ANSI_RED + format.format(new Date()) + "\t" + Thread.currentThread().toString() + "\t" + "Device:" + mDevice.id + "\t" + s + ANSI_RESET);
+        }
+
+        private void justPrint(String s) {
+            System.out.println(s);
+        }
+
+        /**
+         *
+         * Сохранять снимок экрана устройства при возникновении неправильной ситуации.
+         *
+         * @param image Экран устройства, mDevice.getScreen()
+         */
+        private void saveErrorScreenshot(BufferedImage image) {
+            mLogger.print("SAVING ERROR IMAGE");
+            File file = new File(PATH, "DEVICE_" + mDevice.id + "_DATE_" + new Date().getHours() + "_" + new Date().getMinutes() + "_.png");
+            try {
+                FileWriter fileWriter = new FileWriter(file);
+                fileWriter.write("");
+                fileWriter.close();
+            }
+            catch(IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                ImageIO.write(image, "png", file);
+            }
+            catch(IOException e) {
+                printErr("ERROR HAPENNED WHILE SAVING ERROR SCREENSHOT");
+                e.printStackTrace();
+            }
         }
     }
 }

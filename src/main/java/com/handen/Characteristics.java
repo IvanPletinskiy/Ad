@@ -36,6 +36,6 @@ public class Characteristics {
     }
 
     boolean approximatlyEquals(Characteristics characteristics) {
-        return Math.abs(characteristics.red - red) > 25 && Math.abs(characteristics.green - green) > 25 && Math.abs(characteristics.blue - blue) > 25;
+        return (Math.abs(characteristics.red - red) < 25) && (Math.abs(characteristics.green - green) < 25) && (Math.abs(characteristics.blue - blue) < 25);
     }
 }

@@ -6,8 +6,9 @@ public class Main {
     static int devicesCount = 0;
 
     public static void main(String[] args) throws Exception {
-        start(1, 1, 0, 0);
+        start(1, 0, 0, 0);
     }
+
     private static void start(int dev1, int dev2, int dev3, int secondsDelay) throws Exception {
         if(dev1 == 1) {
             Device device1 = new Device(0, "BlueStacks");
