@@ -63,6 +63,8 @@ arrayList.clone();
         mLogger = new Logger();
     }
 
+
+
     void start() {
         Observable.just(new AdObservable())
                 .observeOn(Schedulers.io())
