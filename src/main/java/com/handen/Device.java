@@ -47,6 +47,7 @@ class Device {
         height = rect[3] - rect[1];
         try {
             mRobot = new Robot();
+            mRobot.setAutoDelay(100);
         }
         catch(AWTException e) {
             e.printStackTrace();
@@ -91,7 +92,7 @@ class Device {
     BufferedImage getScreen() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         BufferedImage image = mRobot.createScreenCapture(new java.awt.Rectangle(screenSize));
-        BufferedImage subImage = image.getSubimage(x + 2, 2, width - 2, height - 2);
+        BufferedImage subImage = image.getSubimage(x + 2, 2, width - 4, height - 4);
         return subImage;
     }
 
@@ -110,12 +111,6 @@ class Device {
         mRobot.mouseMove(this.x + x, y);
         mRobot.mousePress(MouseEvent.BUTTON1_DOWN_MASK);
         mRobot.mouseRelease(MouseEvent.BUTTON1_DOWN_MASK);
-        try {
-            Thread.sleep(100);
-        }
-        catch(InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     private void print(String s) {

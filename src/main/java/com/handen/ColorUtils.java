@@ -15,11 +15,11 @@ class ColorUtils {
     }
 
     static boolean checkPixelRed(int[] rgb) {
-        return rgb[0] - rgb[1] >= 50 && rgb[0] >= 150 && rgb[0] - rgb[2] >= 50;
+        return rgb[0] - rgb[1] >= 100 && rgb[0] >= 210 && rgb[0] - rgb[2] >= 100;
     }
 
     static boolean checkPixelBlue(int[] rgb) {
-        return rgb[2] - rgb[0] >= 50 && rgb[2] >= 150 && rgb[2] - rgb[1] >= 50;
+        return rgb[2] - rgb[0] >= 100 && rgb[2] >= 210 && rgb[2] - rgb[1] >= 100;
     }
 
     static boolean checkPixelGreenAdcolony(int[] rgb) {

@@ -24,7 +24,7 @@ import static com.handen.Rectangles.AD_BUTTON;
 import static com.handen.Rectangles.CLOSE_AD_HORIZONTAL;
 import static com.handen.Rectangles.CLOSE_AD_VERTICAL;
 import static com.handen.Rectangles.CLOSE_AD_VERTICAL_1;
-import static com.handen.Rectangles.CLOSE_DOWNLOADED_APP;
+import static com.handen.Rectangles.CLOSE_SECOND_TAB;
 import static com.handen.Rectangles.DELETE_APP_VERTICAL;
 import static com.handen.Rectangles.DELETE_CONFIRMATION_VERTICAL;
 import static com.handen.Rectangles.DEVICE_BACK_BUTTON;
@@ -63,11 +63,10 @@ arrayList.clone();
         mLogger = new Logger();
     }
 
-
     void start() {
         Observable.just(new AdObservable())
                 .observeOn(Schedulers.io())
-            //    .subscribeOn(Schedulers.io())
+                //    .subscribeOn(Schedulers.io())
                 .delay(1, TimeUnit.SECONDS)
                 .doOnNext(this::clickAdButton)
                 .filter((o) -> watchAdAttemptsCount < 5)
@@ -79,7 +78,7 @@ arrayList.clone();
                         findAndClickInstallButton();
                     }
                 })
-                .delay(4, TimeUnit.SECONDS)
+                .delay(8, TimeUnit.SECONDS)
                 .doOnNext((o) -> saveAd())
                 .doOnNext((o) -> {
                     //Inside Google Play
@@ -101,11 +100,10 @@ arrayList.clone();
                     }
                     if(downloadsAttemptsCount >= 240)
                         return;
-
                     mDevice.click(DELETE_APP_VERTICAL);
-                    sleep(1);
-                    mDevice.click(DELETE_CONFIRMATION_VERTICAL);
                     sleep(2);
+                    mDevice.click(DELETE_CONFIRMATION_VERTICAL);
+                    sleep(3);
 
                     Main.downloadedAppsCount++;
                     mLogger.justPrint("Already downloaded: " + Main.downloadedAppsCount);
@@ -165,11 +163,11 @@ arrayList.clone();
 
     /**
      * Проверка на то, находимся ли внутри Google Play
-        Поиск зелёной кнопки внутри Google Play
+     * Поиск зелёной кнопки внутри Google Play
      */
     private Rectangle findGooglePlayButton() {
         BufferedImage screen = mDevice.getScreen();
-        for(int y = 0; y < screen.getHeight(); y++) {
+        for(int y = 0; y < screen.getHeight() / 2; y++) {
             for(int x = 0; x < screen.getWidth(); x++) {
                 int[] pixel = ColorUtils.parse(screen.getRGB(x, y));
                 if(checkPixelGreenGooglePlay(pixel)) {
@@ -287,18 +285,20 @@ arrayList.clone();
     }
 
     private void openErudit() {
-        mDevice.click(CLOSE_DOWNLOADED_APP);
-        sleep(2);
-        mDevice.click(CLOSE_DOWNLOADED_APP);
-        sleep(2);
+        mDevice.click(CLOSE_SECOND_TAB);
+        sleep(3);
+        mDevice.click(CLOSE_SECOND_TAB);
+        sleep(3);
 
         if(mDevice.checkInsideLauncher()) {
             mLogger.print("Inside launcher");
             mDevice.click(OPEN_ERUDIT);
             sleep(3);
         }
-        else
+        else {
             mLogger.print("NOT Inside launcher");
+            sleep(2);
+        }
 
         if(mDevice.checkInsideErudit()) {
             mLogger.print("Inside Erudit");
@@ -306,6 +306,7 @@ arrayList.clone();
         }
         else
             mLogger.print("NOT Inside launcher");
+        sleep(3);
 
         mDevice.click(DEVICE_BACK_BUTTON);
         sleep(3);
@@ -318,7 +319,9 @@ arrayList.clone();
             if(!mDevice.checkInsideErudit()) {
                 mLogger.print("NOT Inside Erudit");
                 mDevice.click(CLOSE_AD_VERTICAL);
+                sleep(1);
                 mDevice.click(CLOSE_AD_VERTICAL_1);
+                sleep(1);
                 mDevice.click(CLOSE_AD_HORIZONTAL);
                 sleep(3);
                 if(!mDevice.checkInsideErudit()) {
@@ -376,13 +379,10 @@ arrayList.clone();
         writer.close();
     }
 
-
     private Characteristics getAdCharacteristics(int centerX, int centerY) {
         BufferedImage screen = mDevice.getScreen();
-
         Characteristics characteristics = new Characteristics();
 
-        //ArrayList<int[]> pixelsList = new ArrayList<>();
         for(int y = centerY - 50; y < centerY + 50; ++y)
             for(int x = centerX - 50; x < centerX + 50; ++x) {
                 int[] pixel = ColorUtils.parse(screen.getRGB(x, y));
@@ -439,7 +439,6 @@ arrayList.clone();
         }
 
         /**
-         *
          * Сохранять снимок экрана устройства при возникновении неправильной ситуации.
          *
          * @param image Экран устройства, mDevice.getScreen()
