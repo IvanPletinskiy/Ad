@@ -59,7 +59,6 @@ class Device {
                 null, Main.devicesCount * 502, 0, 1480, 960, null);
         User32.INSTANCE.SetWindowPos(User32.INSTANCE.FindWindow(null, "BlueStacks " + windowTitle),
                 null, Main.devicesCount * 502, 0, 1480, 960, null);
-        Main.devicesCount++;
     }
 
     private int[] getRect() throws Exception {
@@ -73,18 +72,17 @@ class Device {
 
     boolean checkInsideLauncher() {
         BufferedImage screen = getScreen();
-        int[] pixel1 = ColorUtils.parse(screen.getRGB(x + LAUNCHER_POINT_1.x, LAUNCHER_POINT_1.y));
-        int[] pixel2 = ColorUtils.parse(screen.getRGB(x + LAUNCHER_POINT_2.x, LAUNCHER_POINT_2.y));
+        int[] pixel1 = ColorUtils.parse(screen.getRGB(LAUNCHER_POINT_1.x, LAUNCHER_POINT_1.y));
+        int[] pixel2 = ColorUtils.parse(screen.getRGB(LAUNCHER_POINT_2.x, LAUNCHER_POINT_2.y));
         return pixel1[0] == 255 && pixel1[1] == 255 && pixel1[2] == 255 &&
                 pixel2[0] == 255 && pixel2[1] == 69 && pixel2[2] == 58;
     }
 
     boolean checkInsideErudit() {
         BufferedImage screen = getScreen();
-        int[] pixel1 = ColorUtils.parse(screen.getRGB(x +
-                ERUDIT_POINT_1.x, ERUDIT_POINT_1.y));
-        int[] pixel2 = ColorUtils.parse(screen.getRGB(x + ERUDIT_POINT_2.x, ERUDIT_POINT_2.y));
-        int[] pixel3 = ColorUtils.parse(screen.getRGB(x + ERUDIT_POINT_3.x, ERUDIT_POINT_3.y));
+        int[] pixel1 = ColorUtils.parse(screen.getRGB(ERUDIT_POINT_1.x, ERUDIT_POINT_1.y));
+        int[] pixel2 = ColorUtils.parse(screen.getRGB(ERUDIT_POINT_2.x, ERUDIT_POINT_2.y));
+        int[] pixel3 = ColorUtils.parse(screen.getRGB(ERUDIT_POINT_3.x, ERUDIT_POINT_3.y));
         return pixel1[0] == 103 && pixel1[1] == 58 && pixel1[2] == 183 &&
                 pixel2[0] == 244 && pixel2[1] == 67 && pixel2[2] == 54 &&
                 pixel3[0] == 255 && pixel3[1] == 255 && pixel3[2] == 225;
@@ -105,7 +103,7 @@ class Device {
         int x = rectangle.x + mRandom.nextInt(rectangle.width);
         int y = rectangle.y + mRandom.nextInt(rectangle.height);
         print("Click " + message);
-        click(this.x + x, y);
+        click(x, y);
     }
 
     synchronized void click(int x, int y) {

@@ -16,6 +16,10 @@ class AdObservable<T> extends Observable {
     protected void subscribeActual(Observer observer) {
 
     }
+
+
+
+
 /*
     public Boolean isGooglePlayVertical() {
         return isGooglePlayVertical;
